@@ -7,7 +7,7 @@ export function thresholdMask(prob: Float32Array, thr: number): Uint8Array {
 }
 
 /** False when the segmenter found no person: mean subject probability below `minMean` (2% of the frame). */
-export function hasSubject(prob: Float32Array, minMean = 0.02): boolean {
+export function hasSubject(prob: ArrayLike<number>, minMean = 0.02): boolean {
   let s = 0; for (let i = 0; i < prob.length; i++) s += prob[i];
   return prob.length > 0 && s / prob.length >= minMean;
 }
@@ -71,6 +71,11 @@ export function cleanMask(prob: Float32Array, w: number, h: number, thr = 0.5): 
   m = dilate(erode(m, w, h, 2), w, h, 2);   // open: drop specks
   m = erode(dilate(m, w, h, 5), w, h, 5);   // close: bridge gaps
   return fillHoles(largestComponent(m, w, h), w, h);
+}
+
+/** A person the portrait can use: the cleaned mask (what the pipeline renders) covers at least 2% of the frame. */
+export function personFound(prob: Float32Array, w: number, h: number, thr = 0.5): boolean {
+  return hasSubject(cleanMask(prob, w, h, thr));
 }
 
 function bbox(m: Uint8Array, w: number, h: number) {

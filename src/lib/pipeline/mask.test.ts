@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { autoCrop, cleanMask, fillHoles, hasSubject, largestComponent, shoulderRow, thresholdMask, torsoFade } from "./mask";
+import { autoCrop, cleanMask, fillHoles, hasSubject, largestComponent, personFound, shoulderRow, thresholdMask, torsoFade } from "./mask";
 
 function rect(w: number, h: number, boxes: [number, number, number, number][]) {
   const m = new Uint8Array(w * h);
@@ -50,5 +50,17 @@ describe("mask", () => {
     expect(hasSubject(speck)).toBe(false);
     expect(hasSubject(new Float32Array(1000).fill(0.3))).toBe(true);
     expect(hasSubject(new Float32Array(0))).toBe(false);
+  });
+  it("personFound judges the cleaned mask, not the raw confidence", () => {
+    const diffuse = new Float32Array(60 * 60).fill(0.3);               // mean 0.3, but nothing reaches the 0.5 threshold
+    expect(hasSubject(diffuse)).toBe(true);
+    expect(personFound(diffuse, 60, 60)).toBe(false);
+    const speck = new Float32Array(60 * 60).fill(0.1);                 // diffuse haze plus one 6x6 confident blob (1%)
+    for (let y = 10; y < 16; y++) for (let x = 30; x < 36; x++) speck[y * 60 + x] = 0.9;
+    expect(personFound(speck, 60, 60)).toBe(false);
+    const person = new Float32Array(60 * 60);                          // head-and-shoulders blob, ~40% of the frame
+    for (let y = 15; y < 60; y++) for (let x = 15; x < 45; x++) person[y * 60 + x] = 0.9;
+    expect(personFound(person, 60, 60)).toBe(true);
+    expect(personFound(person, 60, 60, 0.95)).toBe(false);              // the user's threshold applies
   });
 });

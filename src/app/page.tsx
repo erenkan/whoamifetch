@@ -3,20 +3,24 @@
 import Link from "next/link";
 import { useReducer } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExportBar } from "./editor/ExportBar";
 import { IdentityPanel } from "./editor/IdentityPanel";
 import { LooksPanel } from "./editor/LooksPanel";
+import { Preview } from "./editor/Preview";
 import { RowsEditor } from "./editor/RowsEditor";
 import { SourcePanel } from "./editor/SourcePanel";
 import { initialState, reducer } from "./editor/state";
+import { useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
 
 /**
  * Editor. Left: source (GitHub login, local photo or initials), identity, rows, looks.
- * Right: preview of the portrait rows (the SVG preview and export arrive with the card renderer).
+ * Right: the card as an <img> of the generated SVG (rendered the way GitHub renders it) and the export.
  */
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const portrait = usePortrait(state);
+  const { svg, url } = useCardSvg(portrait, state.card);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6">
@@ -36,14 +40,13 @@ export default function Home() {
           <LooksPanel state={state} dispatch={dispatch} />
         </div>
 
-        <Card className="min-h-[480px]">
+        <Card className="h-fit lg:sticky lg:top-6">
           <CardHeader>
             <CardTitle>Preview</CardTitle>
           </CardHeader>
-          <CardContent className="overflow-auto rounded-md bg-[#0d1117] p-4">
-            <pre aria-label="Portrait rows" data-rows={portrait.length} className="font-mono text-[6px] leading-[6px] text-[#3dff6e]">
-              {portrait.map((r) => r.map((c) => c.ch).join("")).join("\n")}
-            </pre>
+          <CardContent className="flex flex-col gap-4">
+            <Preview url={url} />
+            <ExportBar svg={svg} alt={state.card.alt} />
           </CardContent>
         </Card>
       </div>
