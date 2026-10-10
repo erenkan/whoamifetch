@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-export function Preview({ url }: { url: string | null }) {
-  const [nonce, setNonce] = useState(0);   // changing the key reloads the <img>, replaying the SMIL animation
+/** The card as GitHub shows it. Static while editing; "Play animation" plays the reveal once. */
+export function Preview({ url, canPlay, onPlay }: { url: string | null; canPlay: boolean; onPlay: () => void }) {
+  const [nonce, setNonce] = useState(0);   // a new key reloads the <img>, restarting the SMIL timeline
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded-md bg-[#0d1117] p-4">
@@ -12,7 +13,9 @@ export function Preview({ url }: { url: string | null }) {
           <img key={nonce} src={url} alt="Card preview" className="block w-full" />
         ) : <p className="text-sm text-neutral-400">Rendering…</p>}
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={() => setNonce((n) => n + 1)} disabled={!url}>Replay animation</Button>
+      <Button type="button" variant="outline" size="sm" disabled={!url || !canPlay} onClick={() => { onPlay(); setNonce((n) => n + 1); }}>
+        Play animation
+      </Button>
     </div>
   );
 }

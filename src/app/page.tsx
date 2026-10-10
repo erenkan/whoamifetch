@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useReducer } from "react";
+import { useMemo, useReducer, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { previewCard } from "./editor/cardVariant";
 import { ExportBar } from "./editor/ExportBar";
 import { IdentityPanel } from "./editor/IdentityPanel";
 import { LooksPanel } from "./editor/LooksPanel";
@@ -10,7 +11,7 @@ import { Preview } from "./editor/Preview";
 import { RowsEditor } from "./editor/RowsEditor";
 import { SourcePanel } from "./editor/SourcePanel";
 import { initialState, reducer } from "./editor/state";
-import { useCardSvg } from "./editor/useCardSvg";
+import { renderCard, useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
 
 /**
@@ -20,7 +21,11 @@ import { usePortrait } from "./editor/usePortrait";
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const portrait = usePortrait(state);
-  const { svg, url } = useCardSvg(portrait, state.card);
+  // "Play animation" holds for exactly the card and portrait it was pressed on; the next edit returns to the static preview.
+  const [played, setPlayed] = useState<{ card: typeof state.card; portrait: typeof portrait } | null>(null);
+  const playing = played?.card === state.card && played.portrait === portrait;
+  const shown = useMemo(() => previewCard(state.card, playing), [state.card, playing]);
+  const url = useCardSvg(portrait, shown);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6">
@@ -45,8 +50,8 @@ export default function Home() {
             <CardTitle>Preview</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Preview url={url} />
-            <ExportBar svg={svg} alt={state.card.alt} />
+            <Preview url={url} canPlay={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })} />
+            <ExportBar render={() => renderCard(portrait, state.card)} ready={!!url} alt={state.card.alt} />
           </CardContent>
         </Card>
       </div>

@@ -9,6 +9,9 @@ monitor (or a macOS terminal window). Output is a single animated SVG you commit
 to `api.github.com` (optional profile prefill) and `avatars.githubusercontent.com` (your public
 avatar); this is enforced by the site's Content-Security-Policy, not just promised. An uploaded
 photo is drawn on a canvas and never leaves your device. No accounts, no analytics, no storage.
+The MediaPipe runtime attempts anonymous usage pings to `odml.pa.googleapis.com` (task type, OS
+family, latency; never image data); the Content-Security-Policy blocks them, so none leave the
+browser.
 
 ## Development
 
