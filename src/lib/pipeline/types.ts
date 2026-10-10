@@ -54,5 +54,5 @@ export interface Grid {
 export interface Raster {
   width: number;
   height: number;
-  data: Uint8ClampedArray;
+  data: Uint8ClampedArray<ArrayBuffer>;
 }
