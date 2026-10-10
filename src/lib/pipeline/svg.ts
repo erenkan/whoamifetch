@@ -23,3 +23,9 @@ export const DEFAULT_ROWS = [
   { key: "Location", value: "Istanbul, TR" },
   { key: "Contact", value: "you@example.com" },
 ];
+
+export const DEFAULT_CARD: CardOptions = {
+  userHost: "you@github", command: "whoami", rows: DEFAULT_ROWS, phosphor: "green", accent: "amber", chrome: "crt",
+  width: 900, artSize: 8.5, infoSize: 20, lineHeight: 1.15, animate: true, bulge: 10, curve: 0.028,
+  alt: "Retro terminal card: ASCII portrait with a whoami-style profile summary",
+};
