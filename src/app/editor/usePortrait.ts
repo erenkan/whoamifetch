@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { artRows, initialsRows } from "@/lib/pipeline/ascii";
 import { portraitGrid } from "@/lib/pipeline/luminance";
+import { cleanMask } from "@/lib/pipeline/mask";
 import type { Cell } from "@/lib/pipeline/types";
 import type { EditorState } from "./state";
 
@@ -13,8 +14,9 @@ export function usePortrait(s: EditorState): Cell[][] {
   return useMemo(() => {
     if (s.source.kind === "none" || !s.photo) return initialsRows(s.source.initials, s.portrait.cols);
     const prob = s.removeBackground ? s.prob : null;
-    const p = prob && s.maskThreshold !== 0.5 ? prob.map((v) => (v >= s.maskThreshold ? 1 : 0)) : prob;
-    return artRows(portraitGrid(s.photo, p, s.portrait));
+    // The source step already cleaned the mask; clean again only after the threshold slider moved.
+    const mask = !prob ? undefined : s.mask?.thr === s.maskThreshold ? s.mask.data : cleanMask(prob, s.photo.width, s.photo.height, s.maskThreshold);
+    return artRows(portraitGrid(s.photo, prob, s.portrait, undefined, mask));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced, s.photo, s.prob]);
+  }, [debounced, s.photo, s.prob, s.mask]);
 }

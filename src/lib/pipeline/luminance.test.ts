@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadGrid, loadMaskProb, loadPng, loadRows } from "../../../tests/helpers/fixtures";
 import { artRows, RAMP } from "./ascii";
 import { DEFAULT_PORTRAIT, portraitGrid } from "./luminance";
-import { personFound } from "./mask";
+import { subjectMask } from "./mask";
 
 describe("portraitGrid against the Python prototype", () => {
   const img = loadPng("portrait.png");
@@ -31,7 +31,13 @@ describe("portraitGrid against the Python prototype", () => {
     expect(adjacent / total).toBeGreaterThan(0.95);
   });
   it("the fixture's segmenter mask counts as a person", () => {
-    expect(personFound(prob, img.width, img.height)).toBe(true);
+    expect(subjectMask(prob, img.width, img.height)).not.toBeNull();
+  });
+  it("uses a pre-cleaned mask instead of cleaning prob again", () => {
+    const same = portraitGrid(img, prob, DEFAULT_PORTRAIT, crop, subjectMask(prob, img.width, img.height)!);
+    expect(Array.from(same.data)).toEqual(Array.from(grid.data));
+    const empty = portraitGrid(img, prob, DEFAULT_PORTRAIT, crop, new Uint8Array(prob.length));
+    expect(Math.max(...empty.data)).toBe(0);
   });
   it("blank mask yields a blank grid", () => {
     const g = portraitGrid(img, new Float32Array(prob.length), DEFAULT_PORTRAIT, crop);

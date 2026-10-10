@@ -12,22 +12,30 @@ export function hasSubject(prob: ArrayLike<number>, minMean = 0.02): boolean {
   return prob.length > 0 && s / prob.length >= minMean;
 }
 
-function morph(m: Uint8Array, w: number, h: number, r: number, keep: 1 | 0): Uint8Array {
-  // keep=1: erode (output 1 only if the whole window is 1); keep=0: dilate (1 if any is 1)
-  const out = new Uint8Array(m.length);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    let all = 1, any = 0;
-    for (let dy = -r; dy <= r && (all || !any); dy++) for (let dx = -r; dx <= r; dx++) {
-      const yy = y + dy, xx = x + dx;
-      const v = yy >= 0 && yy < h && xx >= 0 && xx < w ? m[yy * w + xx] : 0;
-      if (!v) all = 0; else any = 1;
+/**
+ * Square-window erode (`all`: every pixel in the window is 1) or dilate (any pixel is 1), as a
+ * horizontal then a vertical pass with a running count; out-of-image pixels count as 0.
+ */
+function morph(m: Uint8Array, w: number, h: number, r: number, all: boolean): Uint8Array {
+  const full = 2 * r + 1;
+  const pass = (src: Uint8Array, len: number, stride: number, lines: number, lineStride: number) => {
+    const out = new Uint8Array(src.length);
+    for (let l = 0; l < lines; l++) {
+      const base = l * lineStride;
+      let n = 0;
+      for (let j = 0; j < Math.min(r, len); j++) n += src[base + j * stride];
+      for (let i = 0; i < len; i++) {
+        if (i + r < len) n += src[base + (i + r) * stride];
+        if (i - r - 1 >= 0) n -= src[base + (i - r - 1) * stride];
+        out[base + i * stride] = all ? (n === full ? 1 : 0) : (n > 0 ? 1 : 0);
+      }
     }
-    out[y * w + x] = keep === 1 ? all : any;
-  }
-  return out;
+    return out;
+  };
+  return pass(pass(m, w, 1, h, w), h, w, w, 1);
 }
-export const erode = (m: Uint8Array, w: number, h: number, r: number) => morph(m, w, h, r, 1);
-export const dilate = (m: Uint8Array, w: number, h: number, r: number) => morph(m, w, h, r, 0);
+export const erode = (m: Uint8Array, w: number, h: number, r: number) => morph(m, w, h, r, true);
+export const dilate = (m: Uint8Array, w: number, h: number, r: number) => morph(m, w, h, r, false);
 
 function label(m: Uint8Array, w: number, h: number): { labels: Int32Array; sizes: number[] } {
   const labels = new Int32Array(m.length).fill(-1); const sizes: number[] = []; const stack: number[] = [];
@@ -73,9 +81,10 @@ export function cleanMask(prob: Float32Array, w: number, h: number, thr = 0.5): 
   return fillHoles(largestComponent(m, w, h), w, h);
 }
 
-/** A person the portrait can use: the cleaned mask (what the pipeline renders) covers at least 2% of the frame. */
-export function personFound(prob: Float32Array, w: number, h: number, thr = 0.5): boolean {
-  return hasSubject(cleanMask(prob, w, h, thr));
+/** The cleaned subject mask (what the portrait renders), or null when it covers under 2% of the frame: no person. */
+export function subjectMask(prob: Float32Array, w: number, h: number, thr = 0.5): Uint8Array | null {
+  const m = cleanMask(prob, w, h, thr);
+  return hasSubject(m) ? m : null;
 }
 
 function bbox(m: Uint8Array, w: number, h: number) {

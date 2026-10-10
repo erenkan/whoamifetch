@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { autoCrop, cleanMask, fillHoles, hasSubject, largestComponent, personFound, shoulderRow, thresholdMask, torsoFade } from "./mask";
+import { autoCrop, cleanMask, dilate, erode, fillHoles, hasSubject, largestComponent, shoulderRow, subjectMask, thresholdMask, torsoFade } from "./mask";
 
 function rect(w: number, h: number, boxes: [number, number, number, number][]) {
   const m = new Uint8Array(w * h);
@@ -51,16 +51,36 @@ describe("mask", () => {
     expect(hasSubject(new Float32Array(1000).fill(0.3))).toBe(true);
     expect(hasSubject(new Float32Array(0))).toBe(false);
   });
-  it("personFound judges the cleaned mask, not the raw confidence", () => {
+  it("subjectMask returns the cleaned mask only when a person covers 2% of the frame", () => {
     const diffuse = new Float32Array(60 * 60).fill(0.3);               // mean 0.3, but nothing reaches the 0.5 threshold
     expect(hasSubject(diffuse)).toBe(true);
-    expect(personFound(diffuse, 60, 60)).toBe(false);
+    expect(subjectMask(diffuse, 60, 60)).toBeNull();
     const speck = new Float32Array(60 * 60).fill(0.1);                 // diffuse haze plus one 6x6 confident blob (1%)
     for (let y = 10; y < 16; y++) for (let x = 30; x < 36; x++) speck[y * 60 + x] = 0.9;
-    expect(personFound(speck, 60, 60)).toBe(false);
+    expect(subjectMask(speck, 60, 60)).toBeNull();
     const person = new Float32Array(60 * 60);                          // head-and-shoulders blob, ~40% of the frame
     for (let y = 15; y < 60; y++) for (let x = 15; x < 45; x++) person[y * 60 + x] = 0.9;
-    expect(personFound(person, 60, 60)).toBe(true);
-    expect(personFound(person, 60, 60, 0.95)).toBe(false);              // the user's threshold applies
+    expect(Array.from(subjectMask(person, 60, 60)!)).toEqual(Array.from(cleanMask(person, 60, 60)));
+    expect(subjectMask(person, 60, 60, 0.95)).toBeNull();              // the user's threshold applies
+  });
+  it("erode and dilate match the brute-force square window (out-of-image pixels count as 0)", () => {
+    const brute = (m: Uint8Array, w: number, h: number, r: number, all: boolean) => {
+      const out = new Uint8Array(m.length);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        let a = 1, any = 0;
+        for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+          const v = y + dy >= 0 && y + dy < h && x + dx >= 0 && x + dx < w ? m[(y + dy) * w + x + dx] : 0;
+          a &= v; any |= v;
+        }
+        out[y * w + x] = all ? a : any;
+      }
+      return out;
+    };
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (const [w, h, r, density] of [[23, 17, 1, 0.5], [40, 31, 2, 0.8], [31, 40, 5, 0.9], [12, 9, 5, 0.3]] as const) {
+      const m = Uint8Array.from({ length: w * h }, () => (rnd() < density ? 1 : 0));
+      expect(Array.from(erode(m, w, h, r))).toEqual(Array.from(brute(m, w, h, r, true)));
+      expect(Array.from(dilate(m, w, h, r))).toEqual(Array.from(brute(m, w, h, r, false)));
+    }
   });
 });

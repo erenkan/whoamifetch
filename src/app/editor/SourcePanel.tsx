@@ -11,7 +11,7 @@ import { AvatarCorsError, fetchAvatarRaster, rasterFromBlob } from "@/lib/browse
 import { sharedSegmenter } from "@/lib/browser/segment";
 import { fetchProfile } from "@/lib/github";
 import { isIdenticon } from "@/lib/pipeline/identicon";
-import { personFound } from "@/lib/pipeline/mask";
+import { subjectMask } from "@/lib/pipeline/mask";
 import type { Raster } from "@/lib/pipeline/types";
 import type { Action, EditorState, SourceKind } from "./state";
 
@@ -26,8 +26,9 @@ export function SourcePanel({ state, dispatch }: { state: EditorState; dispatch:
   async function segmentAndUse(photo: Raster) {
     await nextFrame();
     const prob = await (await sharedSegmenter()).segment(photo);
-    if (!personFound(prob, photo.width, photo.height, state.maskThreshold)) throw new Error("No person detected; showing initials instead.");
-    dispatch({ type: "SOURCE_READY", photo, prob });
+    const thr = state.maskThreshold, mask = subjectMask(prob, photo.width, photo.height, thr);
+    if (!mask) throw new Error("No person detected; showing initials instead.");
+    dispatch({ type: "SOURCE_READY", photo, prob, mask: { thr, data: mask } });
   }
 
   async function fromGitHub() {

@@ -45,10 +45,13 @@ export function toGrid(p: Prepped, opts: PortraitOptions): Grid {
   return { cols, rows, data };
 }
 
-/** Full pipeline. `prob` is the segmenter output (null = keep everything); `crop` overrides auto-crop. */
-export function portraitGrid(img: Raster, prob: Float32Array | null, opts: PortraitOptions, crop?: Box): Grid {
+/**
+ * Full pipeline. `prob` is the segmenter output (null = keep everything); `crop` overrides auto-crop;
+ * `cleaned` is `cleanMask(prob)` when the caller already has it (it is the expensive step).
+ */
+export function portraitGrid(img: Raster, prob: Float32Array | null, opts: PortraitOptions, crop?: Box, cleaned?: Uint8Array): Grid {
   const { width: w, height: h } = img;
-  const mask = prob ? cleanMask(prob, w, h) : null;
+  const mask = prob ? (cleaned ?? cleanMask(prob, w, h)) : null;
   const box = crop ?? (mask ? autoCrop(mask, w, h) : { x: 0, y: 0, w, h });
   const cimg = cropRaster(img, box);
   const cmask = mask ? Uint8Array.from(cropPlane(Float32Array.from(mask), w, h, box)) : null;

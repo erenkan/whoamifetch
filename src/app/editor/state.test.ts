@@ -5,6 +5,13 @@ describe("editor reducer", () => {
   it("SOURCE_FAILED falls back to the no-photo mode and keeps the error", () => {
     const s = reducer({ ...initialState, source: { ...initialState.source, kind: "github", login: "octocat", status: "loading" } }, { type: "SOURCE_FAILED", error: "no person found" });
     expect(s.source.kind).toBe("none"); expect(s.source.status).toBe("failed"); expect(s.source.error).toBe("no person found");
+    expect(s.photo).toBeNull(); expect(s.prob).toBeNull(); expect(s.mask).toBeNull();
+  });
+  it("SOURCE_READY keeps the cleaned mask together with the threshold it was made with", () => {
+    const photo = { width: 2, height: 1, data: new Uint8ClampedArray(8) };
+    const mask = { thr: 0.5, data: Uint8Array.from([1, 0]) };
+    const s = reducer(initialState, { type: "SOURCE_READY", photo, prob: Float32Array.from([0.9, 0.1]), mask });
+    expect(s.mask).toBe(mask); expect(s.source.status).toBe("ready");
   });
   it("PREFILL fills userHost, Host, Location and initials without touching other rows", () => {
     const s = reducer(initialState, { type: "PREFILL", profile: { login: "octocat", name: "Mona Lisa", bio: "Cat", company: "@github", location: "SF", avatarUrl: "", hasCustomAvatar: true } });

@@ -79,7 +79,13 @@ ${chrome.defs}
     P.push(info(2 + j, `<tspan class="k">${escapeXml(k.trimEnd())}</tspan>${escapeXml(text.slice(k.trimEnd().length))}`, len(text)));
   });
   const base = 2 + o.rows.length + 1;
-  for (let r = 0; r < 2; r++) P.push(info(base + r, CGA.slice(r * 8, r * 8 + 8).map((c) => `<tspan fill="${c}">███</tspan>`).join(""), 24));
+  // CGA strip: two rows of eight swatches, three cells wide each. Rects, so no glyph or font fallback is involved.
+  for (let r = 0; r < 2; r++) {
+    const y = (l.yTop + (base + r) * l.lineInfo).toFixed(1), sw = 3 * l.advInfo;
+    const rects = CGA.slice(r * 8, r * 8 + 8).map((c, i) =>
+      `<rect x="${(l.xInfo + i * sw).toFixed(1)}" y="${y}" width="${sw.toFixed(1)}" height="${l.lineInfo.toFixed(1)}" fill="${c}"/>`).join("");
+    P.push(`<g${op0}>${rects}${appear(tOut + rowDt * (base + r))}</g>`);
+  }
   const cursor = anim ? `<tspan>█<animate attributeName="opacity" values="1;1;0;0" dur="1.1s" repeatCount="indefinite"/></tspan>` : "█";
   P.push(`<text class="i" x="${l.xArt}" y="${l.yEnd.toFixed(1)}"${op0}><tspan class="u">${escapeXml(o.userHost)}</tspan>:~$ ${cursor}${appear(tEnd)}</text>`);
   P.push("</g>");                                                       // glow
