@@ -1,5 +1,5 @@
 "use client";
-import type { Dispatch } from "react";
+import { useEffect, type Dispatch } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AvatarCorsError, fetchAvatarRaster, rasterFromBlob } from "@/lib/browser/raster";
 import { sharedSegmenter } from "@/lib/browser/segment";
-import { fetchProfile } from "@/lib/github";
+import { fetchProfile, normalizeLogin } from "@/lib/github";
 import { isIdenticon } from "@/lib/pipeline/identicon";
 import { subjectMask } from "@/lib/pipeline/mask";
 import type { Raster } from "@/lib/pipeline/types";
@@ -23,6 +23,14 @@ export function SourcePanel({ state, dispatch }: { state: EditorState; dispatch:
   const { kind, login, status, error } = state.source;
   const busy = status === "loading";
 
+  // Load the segmentation model in the background once the page is up, so the first photo needs
+  // no network at all (the privacy page tells people they can go offline and check).
+  useEffect(() => {
+    const warm = () => { sharedSegmenter().catch(() => {}); };
+    if (typeof requestIdleCallback === "function") { const id = requestIdleCallback(warm); return () => cancelIdleCallback(id); }
+    const t = setTimeout(warm, 1000); return () => clearTimeout(t);
+  }, []);
+
   async function segmentAndUse(photo: Raster) {
     await nextFrame();
     const prob = await (await sharedSegmenter()).segment(photo);
@@ -32,8 +40,9 @@ export function SourcePanel({ state, dispatch }: { state: EditorState; dispatch:
   }
 
   async function fromGitHub() {
-    const name = login.trim();
+    const name = normalizeLogin(login);
     if (!name) return;
+    dispatch({ type: "LOGIN", login: name });                 // a pasted profile URL becomes the plain login
     dispatch({ type: "SOURCE_LOADING" });
     try {
       const profile = await fetchProfile(name);
@@ -82,8 +91,10 @@ export function SourcePanel({ state, dispatch }: { state: EditorState; dispatch:
             <Input type="file" accept="image/*" aria-label="Photo" disabled={busy} onChange={(e) => void fromFile(e.target.files?.[0])} />
             <p className="text-xs text-muted-foreground">Processed on a canvas in this tab. The page cannot send it anywhere (CSP).</p>
           </TabsContent>
-          <TabsContent value="none" className="pt-3 text-sm text-muted-foreground">
-            The left column shows your initials in big ASCII letters instead of a portrait.
+          <TabsContent value="none" className="flex flex-col gap-3 pt-3">
+            <Label htmlFor="initials">Initials</Label>
+            <Input id="initials" value={state.source.initials} maxLength={3} onChange={(e) => dispatch({ type: "INITIALS", initials: e.target.value })} />
+            <p className="text-xs text-muted-foreground">Shown in big ASCII letters instead of a portrait (up to three letters or digits).</p>
           </TabsContent>
         </Tabs>
         {busy && <p className="text-sm text-muted-foreground" role="status">Loading photo and finding the person…</p>}

@@ -21,7 +21,7 @@ export interface PortraitOptions {
 }
 
 export interface CardOptions {
-  userHost: string;    // "erenkan@github"
+  userHost: string;    // "you@github"
   command: string;     // "whoami"
   rows: InfoRow[];
   phosphor: Phosphor;

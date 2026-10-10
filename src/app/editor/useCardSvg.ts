@@ -5,8 +5,11 @@ import { layout } from "@/lib/pipeline/layout";
 import { buildCard } from "@/lib/pipeline/svg";
 import type { CardOptions, Cell } from "@/lib/pipeline/types";
 
-export function useCardSvg(portrait: Cell[][], card: CardOptions) {
+/** The card SVG and a Blob URL for it; card edits are applied at most every 150 ms. */
+export function useCardSvg(portrait: Cell[][], cardNow: CardOptions) {
   const [out, setOut] = useState<{ svg: string | null; url: string | null }>({ svg: null, url: null });
+  const [card, setCard] = useState(cardNow);
+  useEffect(() => { const t = setTimeout(() => setCard(cardNow), 150); return () => clearTimeout(t); }, [cardNow]);
   const last = useRef<string | null>(null);
   useEffect(() => {
     let cancelled = false;

@@ -2,7 +2,7 @@ import { drawChrome } from "./chromes";
 import { layout, keyWidth, promptLength, rowText } from "./layout";
 import { ACCENTS, CGA, PALETTES } from "./themes";
 import type { CardOptions, Cell } from "./types";
-import { escapeXml } from "./xml";
+import { cleanText, escapeXml } from "./xml";
 
 export { escapeXml };
 
@@ -25,7 +25,11 @@ function tspans(cells: Cell[]): string {
  * SMIL reveal, CGA palette strip, blinking cursor, barrel-shaped screen with curved scanlines.
  * Must stay renderable inside <img> on GitHub: no scripts, no external resources.
  */
-export function buildCard(portrait: Cell[][], o: CardOptions, assets: CardAssets): string {
+export function buildCard(portrait: Cell[][], opts: CardOptions, assets: CardAssets): string {
+  const o: CardOptions = {
+    ...opts, userHost: cleanText(opts.userHost), command: cleanText(opts.command), alt: cleanText(opts.alt),
+    rows: opts.rows.map((r) => ({ key: cleanText(r.key), value: cleanText(r.value) })),
+  };
   const l = layout(portrait, o), pal = PALETTES[o.phosphor], key = ACCENTS[o.accent];
   const { W, H } = l, FA = o.artSize, FI = o.infoSize, anim = o.animate;
   const appear = (t: number) => (anim ? `<set attributeName="opacity" to="1" begin="${t.toFixed(2)}s" fill="freeze"/>` : "");
@@ -97,16 +101,17 @@ ${chrome.defs}
   return P.join("\n");
 }
 
+/** Descriptive placeholders only: the user replaces them (GitHub prefill fills Host, Location and Kernel). */
 export const DEFAULT_ROWS = [
-  { key: "OS", value: "macOS 26 (Darwin 25.5)" },
-  { key: "Host", value: "Keymate.io" },
-  { key: "Kernel", value: "Software Engineer" },
-  { key: "Uptime", value: "6 years" },
-  { key: "Packages", value: "Keycloak, OAuth 2.0, OIDC" },
-  { key: "DE", value: "React, Next.js, TypeScript" },
+  { key: "OS", value: "Operating system" },
+  { key: "Host", value: "Company" },
+  { key: "Kernel", value: "Role" },
+  { key: "Uptime", value: "N years" },
+  { key: "Packages", value: "Tools, protocols" },
+  { key: "DE", value: "Frontend stack" },
   { key: "Shell", value: "zsh" },
-  { key: "Languages", value: "Java, TypeScript" },
-  { key: "Location", value: "Istanbul, TR" },
+  { key: "Languages", value: "Languages" },
+  { key: "Location", value: "City, Country" },
   { key: "Contact", value: "you@example.com" },
 ];
 

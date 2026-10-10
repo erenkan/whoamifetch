@@ -16,6 +16,14 @@ describe("buildCard", () => {
     const len = Number(line.match(/textLength="([\d.]+)"/)![1]);
     expect(len).toBeCloseTo([..."Bio: a < b & \"c\" 😀"].length * DEFAULT_CARD.infoSize * 0.4, 1);
   });
+  it("drops characters XML cannot carry and folds line breaks into spaces", () => {
+    const svg = buildCard(portrait, { ...DEFAULT_CARD, command: "who\u0000ami", rows: [{ key: "Bio", value: "line1\u000bline2\r\nline3\ttab\ud800" }] }, assets);
+    expect(svg).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]|\r|\t/);
+    expect(svg).toContain("</tspan> line1line2 line3 tab<");
+    const line = svg.slice(svg.lastIndexOf("<text", svg.indexOf(">Bio:<")), svg.indexOf(">Bio:<"));
+    expect(Number(line.match(/textLength="([\d.]+)"/)![1])).toBeCloseTo([..."Bio: line1line2 line3 tab"].length * DEFAULT_CARD.infoSize * 0.4, 1);
+    expect(svg).toContain(`textLength="${([..."you@github:~$ whoami"].length * DEFAULT_CARD.infoSize * 0.4).toFixed(1)}"`); // NUL dropped from the command
+  });
   it("emits no animation when animate is false", () => {
     const svg = buildCard(portrait, { ...DEFAULT_CARD, animate: false }, assets);
     expect(svg).not.toContain("<set"); expect(svg).not.toMatch(/\sopacity="0"/); expect(svg).not.toContain("<animate"); // stop-opacity="0" in gradients is fine

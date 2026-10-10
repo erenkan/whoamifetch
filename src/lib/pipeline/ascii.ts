@@ -63,11 +63,12 @@ const FONT: Record<string, string[]> = {
 
 /** Big block initials for the no-photo mode. Each font pixel becomes an sx×sy block of '#'. */
 export function initialsRows(initials: string, cols: number): Cell[][] {
-  const letters = initials.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3) || "?";
+  // Fold accents (Ş, Ö, Ç, İ → S, O, C, I) so names outside ASCII keep their letters.
+  const letters = initials.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3) || "?";
   const glyphs = [...letters].map((ch) => FONT[ch] ?? FONT["?"]);
   const gap = 1, unitsW = glyphs.length * 5 + (glyphs.length - 1) * gap;
-  const sx = Math.max(1, Math.floor((cols * 0.7) / unitsW));
-  const sy = Math.max(1, Math.round(sx * 0.4 * 2.2)); // keep blocks roughly square in VT323 cells
+  const sx = Math.max(1, Math.floor((cols * 0.9) / unitsW));
+  const sy = Math.max(1, Math.round(sx * 0.4));        // a cell is 0.4 as wide as it is tall: square font pixels
   const width = unitsW * sx, left = Math.max(0, Math.floor((cols - width) / 2));
   const rows: Cell[][] = [];
   const pad = Math.max(1, Math.round(sy));

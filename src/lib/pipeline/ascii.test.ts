@@ -19,6 +19,18 @@ describe("initialsRows", () => {
     expect(text.some((l) => l.includes("#####"))).toBe(true); // top bar of the E
     expect(text.every((l) => l.length <= 20)).toBe(true);
   });
+  it("keeps each font pixel square on screen (a cell is 0.4 as wide as it is tall)", () => {
+    const rows = initialsRows("E", 100);
+    const ink = rows.filter((r) => r.some((c) => c.ch === "#"));
+    const width = Math.max(...ink.map((r) => r.length - r.findIndex((c) => c.ch === "#")));
+    const pxW = width / 5, pxH = ink.length / 7;            // cells per font pixel, across and down
+    expect(Math.abs(pxH / (pxW * 0.4) - 1)).toBeLessThan(0.25);
+    expect(width).toBeGreaterThanOrEqual(80);              // the block fills ~90% of the columns
+  });
+  it("folds accents and Turkish letters to their base letters", () => {
+    const text = (s: string) => initialsRows(s, 40).map((r) => r.map((c) => c.ch).join("")).join("\n");
+    expect(text("şö")).toBe(text("SO")); expect(text("ÇK")).toBe(text("CK")); expect(text("İı")).toBe(text("II"));
+  });
   it("accepts up to three letters and ignores case", () => {
     expect(initialsRows("ek", 40).length).toBe(initialsRows("EK", 40).length);
     expect(initialsRows("abcd", 40)[0].length).toBeLessThanOrEqual(40);

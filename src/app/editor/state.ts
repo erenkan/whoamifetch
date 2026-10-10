@@ -19,7 +19,8 @@ export type Action =
   | { type: "SOURCE_FAILED"; error: string } | { type: "PREFILL"; profile: GitHubProfile }
   | { type: "CARD"; patch: Partial<CardOptions> } | { type: "PORTRAIT"; patch: Partial<PortraitOptions> }
   | { type: "ROW_SET"; index: number; row: InfoRow } | { type: "ROW_ADD" } | { type: "ROW_REMOVE"; index: number } | { type: "ROW_MOVE"; from: number; to: number }
-  | { type: "PRESET"; id: string } | { type: "MASK"; removeBackground?: boolean; threshold?: number };
+  | { type: "PRESET"; id: string } | { type: "MASK"; removeBackground?: boolean; threshold?: number }
+  | { type: "INITIALS"; initials: string };
 
 export const MAX_ROWS = 12;
 export const initialState: EditorState = {
@@ -61,5 +62,6 @@ export function reducer(s: EditorState, a: Action): EditorState {
       return { ...s, card: { ...s.card, chrome: p.chrome, phosphor: p.phosphor, accent: p.accent } };
     }
     case "MASK": return { ...s, removeBackground: a.removeBackground ?? s.removeBackground, maskThreshold: a.threshold ?? s.maskThreshold };
+    case "INITIALS": return { ...s, source: { ...s.source, initials: a.initials } };
   }
 }

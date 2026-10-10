@@ -3,7 +3,7 @@ import { initialState, reducer } from "./state";
 
 describe("editor reducer", () => {
   it("SOURCE_FAILED falls back to the no-photo mode and keeps the error", () => {
-    const s = reducer({ ...initialState, source: { ...initialState.source, kind: "github", login: "octocat", status: "loading" } }, { type: "SOURCE_FAILED", error: "no person found" });
+    const s = reducer({ ...initialState, source: { ...initialState.source, kind: "github", login: "test-user", status: "loading" } }, { type: "SOURCE_FAILED", error: "no person found" });
     expect(s.source.kind).toBe("none"); expect(s.source.status).toBe("failed"); expect(s.source.error).toBe("no person found");
     expect(s.photo).toBeNull(); expect(s.prob).toBeNull(); expect(s.mask).toBeNull();
   });
@@ -13,13 +13,23 @@ describe("editor reducer", () => {
     const s = reducer(initialState, { type: "SOURCE_READY", photo, prob: Float32Array.from([0.9, 0.1]), mask });
     expect(s.mask).toBe(mask); expect(s.source.status).toBe("ready");
   });
-  it("PREFILL fills userHost, Host, Location and initials without touching other rows", () => {
-    const s = reducer(initialState, { type: "PREFILL", profile: { login: "octocat", name: "Mona Lisa", bio: "Cat", company: "@github", location: "SF", avatarUrl: "", hasCustomAvatar: true } });
-    expect(s.card.userHost).toBe("octocat@github");
-    expect(s.card.rows.find((r) => r.key === "Host")?.value).toBe("github");
-    expect(s.card.rows.find((r) => r.key === "Location")?.value).toBe("SF");
-    expect(s.source.initials).toBe("ML");
+  it("PREFILL fills userHost, Host, Location, Kernel and initials without touching other rows", () => {
+    const s = reducer(initialState, { type: "PREFILL", profile: { login: "test-user", name: "Test User", bio: "Test bio", company: "@test-org", location: "Test City", avatarUrl: "", hasCustomAvatar: true } });
+    expect(s.card.userHost).toBe("test-user@github");
+    expect(s.card.rows.find((r) => r.key === "Host")?.value).toBe("test-org");
+    expect(s.card.rows.find((r) => r.key === "Location")?.value).toBe("Test City");
+    expect(s.card.rows.find((r) => r.key === "Kernel")?.value).toBe("Test bio");
+    expect(s.source.initials).toBe("TU");
     expect(s.card.rows.length).toBe(initialState.card.rows.length);
+  });
+  it("INITIALS sets the no-photo initials", () => {
+    expect(reducer(initialState, { type: "INITIALS", initials: "ek" }).source.initials).toBe("ek");
+  });
+  it("ships neutral default rows, no personal data", () => {
+    expect(initialState.card.rows.map((r) => [r.key, r.value])).toEqual([
+      ["OS", "Operating system"], ["Host", "Company"], ["Kernel", "Role"], ["Uptime", "N years"], ["Packages", "Tools, protocols"],
+      ["DE", "Frontend stack"], ["Shell", "zsh"], ["Languages", "Languages"], ["Location", "City, Country"], ["Contact", "you@example.com"],
+    ]);
   });
   it("row operations", () => {
     let s = reducer(initialState, { type: "ROW_ADD" });

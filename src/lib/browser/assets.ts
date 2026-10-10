@@ -13,7 +13,16 @@ export function loadFontBase64(): Promise<string> {
   return fontCache;
 }
 
-export async function displacementPng(w: number, h: number, strength: number, scale = 24): Promise<string> {
+let mapCache: { key: string; png: Promise<string> } | null = null;
+
+/** Base64 PNG of the CRT displacement field; the last one is reused while the size and curve stay put. */
+export function displacementPng(w: number, h: number, strength: number, scale = 24): Promise<string> {
+  const key = `${w}x${h}:${strength}:${scale}`;
+  if (mapCache?.key !== key) mapCache = { key, png: renderField(w, h, strength, scale) };
+  return mapCache.png;
+}
+
+async function renderField(w: number, h: number, strength: number, scale: number): Promise<string> {
   const f = displacementField(w, h, strength, scale);
   const canvas = new OffscreenCanvas(f.width, f.height), ctx = canvas.getContext("2d")!;
   ctx.putImageData(new ImageData(f.data, f.width, f.height), 0, 0);
