@@ -68,6 +68,41 @@ ${btn(W - 26, `<path d="M${W - 22} 12l8 8M${W - 14} 12l-8 8" stroke="#000" strok
   return { defs, before, after, clip: "scr-clip" };
 }
 
+/**
+ * One-piece beige all-in-one: chamfered recess around a rounded, slightly bowed glass, a front
+ * panel under it with a small label (the command) and a floppy slot, and a stepped base.
+ * No manufacturer marks: the label is the user's command, nothing else.
+ */
+function macplus(l: Layout, pal: Palette, o: CardOptions): ChromeParts {
+  const { x, y, w, h } = l.screen, { W, H } = l;
+  const r = 22, step = 28, Hb = H - step, bz = 28;
+  const bx = x - bz, by = y - bz, bw = w + 2 * bz, bh = h + 2 * bz, py = by + bh, mid = (py + Hb) / 2;
+  const glass = barrelPath(x, y, w, h, 6, 18);
+  const body = `M${r},0H${W - r}A${r},${r} 0 0 1 ${W},${r}V${Hb - 4}A4,4 0 0 1 ${W - 4},${Hb}H${W - 10}V${H - 10}A10,10 0 0 1 ${W - 20},${H}H20A10,10 0 0 1 10,${H - 10}V${Hb}H4A4,4 0 0 1 0,${Hb - 4}V${r}A${r},${r} 0 0 1 ${r},0Z`;
+  const cmd = escapeXml(o.command);
+  const sx = x + w - 230, sy = f(mid - 17);
+  const defs = `<linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6ddc6"/><stop offset="1" stop-color="#c9bea2"/></linearGradient>
+<linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="${pal.paper ? ".22" : ".5"}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+<radialGradient id="glass" cx="22%" cy="12%" r="55%"><stop offset="0" stop-color="#fff" stop-opacity=".11"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<clipPath id="scr-clip"><path d="${glass}"/></clipPath>
+<clipPath id="bezel"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="16"/></clipPath>
+<clipPath id="body-clip"><path d="${body}"/></clipPath>`;
+  const before = `<path d="${body}" fill="url(#body)"/>
+<rect x="10" y="${Hb}" width="${W - 20}" height="${step}" fill="#bdb294" clip-path="url(#body-clip)"/><rect x="10" y="${Hb}" width="${W - 20}" height="3" fill="#000" opacity=".22"/>
+<path d="${body}" fill="none" stroke="#8d8574"/><path d="M${r},1.5H${W - r}M1.5,${r}V${Hb - 6}" fill="none" stroke="#f3eedf" stroke-opacity=".8"/>
+<g clip-path="url(#bezel)"><path d="M${bx},${by}H${bx + bw}L${x + w},${y}H${x}Z" fill="#a79c82"/><path d="M${bx + bw},${by}V${py}L${x + w},${y + h}V${y}Z" fill="#c6bb9f"/><path d="M${bx + bw},${py}H${bx}L${x},${y + h}H${x + w}Z" fill="#e9e2cd"/><path d="M${bx},${py}V${by}L${x},${y}V${y + h}Z" fill="#b8ad92"/></g>
+<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="16" fill="none" stroke="#a89d82"/>
+<path d="${glass}" fill="none" stroke="#6f6859" stroke-width="4"/>
+<text x="${x + 4}" y="${f(mid + 7)}" font-size="18" letter-spacing="1" style="fill:#f3eedf">${cmd}</text><text x="${x + 3}" y="${f(mid + 6)}" font-size="18" letter-spacing="1" style="fill:#6e6552">${cmd}</text>
+<rect x="${sx}" y="${sy}" width="230" height="34" rx="7" fill="#c3b89c"/><rect x="${sx}" y="${sy}" width="230" height="34" rx="7" fill="none" stroke="#a89d82"/>
+<rect x="${sx + 16}" y="${f(mid - 5)}" width="186" height="9" rx="2.5" fill="#2a2820"/><rect x="${sx + 16}" y="${f(mid + 2)}" width="186" height="2.5" rx="1" fill="#8e8c85"/><circle cx="${sx + 214}" cy="${f(mid)}" r="2" fill="#3a362c"/>
+<path d="${glass}" fill="url(#scr)"/>`;
+  const after = `<path d="${glass}" fill="url(#vig)"/>
+<path d="${glass}" fill="url(#glass)"/>
+<rect x="${x}" y="${y}" width="${w}" height="30" fill="url(#shade)"/>`;
+  return { defs, before, after, clip: "scr-clip" };
+}
+
 export function drawChrome(kind: Chrome, l: Layout, pal: Palette, o: CardOptions): ChromeParts {
-  return kind === "crt" ? crt(l, pal, o) : kind === "win95" ? win95(l, pal, o) : macos(l, pal, o);
+  return kind === "crt" ? crt(l, pal, o) : kind === "win95" ? win95(l, pal, o) : kind === "macplus" ? macplus(l, pal, o) : macos(l, pal, o);
 }

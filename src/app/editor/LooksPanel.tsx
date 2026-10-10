@@ -6,13 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { PRESETS } from "@/lib/pipeline/themes";
-import type { Accent, CardOptions, Chrome, Phosphor, PortraitOptions } from "@/lib/pipeline/types";
+import { ACCENT_NAMES, CHROME_NAMES, PHOSPHOR_NAMES, PRESETS } from "@/lib/pipeline/themes";
+import type { CardOptions, PortraitOptions } from "@/lib/pipeline/types";
 import type { Action, EditorState } from "./state";
-
-const CHROMES: Record<Chrome, string> = { crt: "CRT monitor", macos: "macOS terminal", win95: "Windows 95" };
-const PHOSPHORS: Record<Phosphor, string> = { green: "Green", amber: "Amber", white: "White" };
-const ACCENT_NAMES: Record<Accent, string> = { amber: "Amber", cyan: "Cyan", green: "Green", white: "White" };
 
 function SliderRow({ label, value, min, max, step, digits = 2, onChange }: {
   label: string; value: number; min: number; max: number; step: number; digits?: number; onChange: (v: number) => void;
@@ -61,8 +57,8 @@ export function LooksPanel({ state, dispatch }: { state: EditorState; dispatch: 
             );
           })}
         </div>
-        <Choice id="chrome" label="Frame" items={CHROMES} value={card.chrome} onChange={(chrome) => setCard({ chrome })} />
-        <Choice id="phosphor" label="Phosphor" items={PHOSPHORS} value={card.phosphor} onChange={(phosphor) => setCard({ phosphor })} />
+        <Choice id="chrome" label="Frame" items={CHROME_NAMES} value={card.chrome} onChange={(chrome) => setCard({ chrome })} />
+        <Choice id="phosphor" label="Phosphor" items={PHOSPHOR_NAMES} value={card.phosphor} onChange={(phosphor) => setCard({ phosphor })} />
         <Choice id="accent" label="Accent" items={ACCENT_NAMES} value={card.accent} onChange={(accent) => setCard({ accent })} />
         <SliderRow label="Columns" value={p.cols} min={70} max={120} step={10} digits={0} onChange={(cols) => setPortrait({ cols })} />
         {card.chrome === "crt" && (
