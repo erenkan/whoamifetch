@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# whoamifetch
 
-## Getting Started
+Turn your photo and a few lines about yourself into a retro terminal card for your GitHub
+profile README: an ASCII portrait printed by `whoami`, neofetch-style, on a curved CRT
+monitor (or a macOS terminal window). Output is a single animated SVG you commit to your
+`<username>/<username>` repository.
 
-First, run the development server:
+**Privacy.** Everything runs in your browser. The only network requests the page can make are
+to `api.github.com` (optional profile prefill) and `avatars.githubusercontent.com` (your public
+avatar); this is enforced by the site's Content-Security-Policy, not just promised. An uploaded
+photo is drawn on a canvas and never leaves your device. No accounts, no analytics, no storage.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Development
+
+```sh
+pnpm install
+pnpm dev          # http://localhost:3000
+pnpm build        # static export to out/ (prebuild fetches the segmentation model)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Deploys as a static site on Cloudflare Pages (build command `pnpm build`, output `out`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Credits
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Font: [VT323](https://github.com/google/fonts/tree/main/ofl/vt323) by Peter Hull, SIL OFL 1.1
+  (`public/fonts/OFL.txt`), embedded into the SVG as a subset.
+- Background removal: [MediaPipe](https://developers.google.com/mediapipe) selfie segmenter,
+  Apache 2.0, running locally via WebAssembly.
+- The original card and the Python prototype live in
+  [erenkan/erenkan](https://github.com/erenkan/erenkan).

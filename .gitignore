@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# fetched at build time by scripts/fetch-models.mjs
+/public/mediapipe/
+/public/models/

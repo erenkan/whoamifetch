@@ -1,0 +1,8 @@
+# Cloudflare Pages headers. The CSP is the privacy guarantee: the page can only talk to
+# itself, api.github.com (profile prefill) and avatars.githubusercontent.com (avatar).
+# Uploaded photos are processed on a canvas and can never leave the browser.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com; connect-src 'self' https://api.github.com https://avatars.githubusercontent.com; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
