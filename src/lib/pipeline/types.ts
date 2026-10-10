@@ -49,3 +49,10 @@ export interface Grid {
   rows: number;
   data: Float32Array;
 }
+
+/** RGBA pixels. Structurally identical to the DOM's ImageData so browser code can pass one in. */
+export interface Raster {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+}
