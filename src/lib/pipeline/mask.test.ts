@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { autoCrop, cleanMask, fillHoles, largestComponent, shoulderRow, thresholdMask, torsoFade } from "./mask";
+import { autoCrop, cleanMask, fillHoles, hasSubject, largestComponent, shoulderRow, thresholdMask, torsoFade } from "./mask";
 
 function rect(w: number, h: number, boxes: [number, number, number, number][]) {
   const m = new Uint8Array(w * h);
@@ -43,5 +43,12 @@ describe("mask", () => {
     expect(b.x).toBeGreaterThanOrEqual(0); expect(b.y).toBeGreaterThanOrEqual(0);
     expect(b.x + b.w).toBeLessThanOrEqual(400); expect(b.y + b.h).toBeLessThanOrEqual(100);
     expect(Math.abs(b.w / b.h - 6 / 7)).toBeLessThan(0.35); // clamped by the short image height
+  });
+  it("hasSubject is false when the mean subject probability is under 2%", () => {
+    expect(hasSubject(new Float32Array(1000).fill(0.01))).toBe(false);   // landscape, logo: segmenter miss
+    const speck = new Float32Array(1000); speck.fill(1, 0, 15);           // 1.5% of the frame
+    expect(hasSubject(speck)).toBe(false);
+    expect(hasSubject(new Float32Array(1000).fill(0.3))).toBe(true);
+    expect(hasSubject(new Float32Array(0))).toBe(false);
   });
 });

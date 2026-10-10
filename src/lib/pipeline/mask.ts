@@ -6,6 +6,12 @@ export function thresholdMask(prob: Float32Array, thr: number): Uint8Array {
   return m;
 }
 
+/** False when the segmenter found no person: mean subject probability below `minMean` (2% of the frame). */
+export function hasSubject(prob: Float32Array, minMean = 0.02): boolean {
+  let s = 0; for (let i = 0; i < prob.length; i++) s += prob[i];
+  return prob.length > 0 && s / prob.length >= minMean;
+}
+
 function morph(m: Uint8Array, w: number, h: number, r: number, keep: 1 | 0): Uint8Array {
   // keep=1: erode (output 1 only if the whole window is 1); keep=0: dilate (1 if any is 1)
   const out = new Uint8Array(m.length);

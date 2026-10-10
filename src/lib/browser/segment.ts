@@ -19,3 +19,11 @@ export async function loadSegmenter(): Promise<Segmenter> {
     close: () => seg.close(),
   };
 }
+
+let shared: Promise<Segmenter> | null = null;
+
+/** One segmenter per page: the WASM runtime and the model load on first use only; a failed load is retried next time. */
+export function sharedSegmenter(): Promise<Segmenter> {
+  shared ??= loadSegmenter().catch((e) => { shared = null; throw e; });
+  return shared;
+}
