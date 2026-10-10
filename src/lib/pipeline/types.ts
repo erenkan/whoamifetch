@@ -1,8 +1,8 @@
 /** Shared types for the whoamifetch pipeline (photo → luminance grid → ASCII rows → SVG). */
 
-export type Phosphor = "green" | "amber";
+export type Phosphor = "green" | "amber" | "white";
 export type Accent = "amber" | "cyan" | "green" | "white";
-export type Chrome = "crt" | "window";
+export type Chrome = "crt" | "macos" | "win95";
 
 export interface InfoRow {
   key: string;   // "OS", "Host", ... (rendered as "Key:" in the accent colour)
