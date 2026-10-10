@@ -12,7 +12,12 @@ const modelUrl =
   "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
 
 await mkdir(wasmDst, { recursive: true });
-for (const f of await readdir(wasmSrc)) await copyFile(path.join(wasmSrc, f), path.join(wasmDst, f));
+// Only the classic-script runtimes: SIMD (modern browsers) and the no-SIMD fallback. The
+// ES-module variants are not used by FilesetResolver.forVisionTasks(), and each .wasm is ~13 MB.
+for (const f of await readdir(wasmSrc)) {
+  if (!/^vision_wasm_(nosimd_)?internal\.(js|wasm)$/.test(f)) continue;
+  await copyFile(path.join(wasmSrc, f), path.join(wasmDst, f));
+}
 
 const have = await stat(modelDst).catch(() => null);
 if (!have) {
