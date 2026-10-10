@@ -32,9 +32,28 @@ segmenter, the embedded font) lives in [`src/lib/browser`](src/lib/browser).
 
 ## Deploy
 
-Cloudflare Pages: connect the repository, set the build command to `pnpm build`, the output
-directory to `out` and Node to 22. `public/_headers` (the Content-Security-Policy) ships with
-the output, so the privacy guarantees hold on the deployed site.
+Cloudflare Pages, as a plain static site (no Functions):
+
+1. Workers & Pages → Create → Pages → connect this Git repository; production branch `main`.
+2. Build settings: framework preset *None*, build command `pnpm build`, build output directory
+   `out`.
+3. Environment variables (production and preview): `NODE_VERSION=22` and `PNPM_VERSION=10.15.1`
+   (the version in `package.json`'s `packageManager`).
+4. Save and deploy. `pnpm build` first runs `scripts/fetch-models.mjs`, which puts the MediaPipe
+   runtime and the segmentation model into `public/`, so they are served from the site's own
+   origin. `public/_headers` is copied to `out/_headers`, and Pages applies it to every response.
+   Pushes to other branches get preview deployments.
+
+Verify the privacy guarantee on the deployed site:
+
+```sh
+curl -sI https://<project>.pages.dev/ | grep -i '^content-security-policy'
+# connect-src must list only 'self' https://api.github.com https://avatars.githubusercontent.com
+curl -sI https://<project>.pages.dev/models/selfie_segmenter.tflite | head -1   # HTTP/2 200
+```
+
+Then open the site with the browser's developer tools on the network tab and upload a photo:
+no request appears.
 
 ## Credits
 
