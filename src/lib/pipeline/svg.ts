@@ -53,34 +53,35 @@ ${anim ? "@media (prefers-reduced-motion:reduce){[opacity=\"0\"]{opacity:1 !impo
 <radialGradient id="scr" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="${pal.screen0}"/><stop offset="1" stop-color="${pal.screen1}"/></radialGradient>
 <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.5"/></radialGradient>
 <pattern id="scan" width="2" height="3" patternUnits="userSpaceOnUse"><rect width="2" height="1" fill="#000" opacity="0.32"/></pattern>
-<filter id="glow" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="glow" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.1"/></filter>
 ${useMap ? `<filter id="crt" x="0" y="0" width="${W}" height="${H}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,${assets.displacementPng}" xlink:href="data:image/png;base64,${assets.displacementPng}" x="${s.x - scale}" y="${s.y - scale}" width="${s.w + 2 * scale}" height="${s.h + 2 * scale}" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter>` : ""}
 ${chrome.defs}
 </defs>`);
   P.push(chrome.before);
-  P.push(`<g clip-path="url(#${chrome.clip})"><g filter="url(#glow)">`);
+  P.push(`<g clip-path="url(#${chrome.clip})">`);
+  const T: string[] = [];                                              // everything on the screen glass
   // prompt, typed character by character
   const segs: [string, string][] = [[o.userHost, "u"], [":~$ ", ""], [o.command, "c"]];
   let i = 0, chars = "";
   for (const [txt, cls] of segs) for (const ch of txt) {
     chars += `<tspan${cls ? ` class="${cls}"` : ""}${op0}>${escapeXml(ch)}${appear(0.4 + typingDt * i)}</tspan>`; i++;
   }
-  P.push(`<text class="i" x="${l.xArt}" y="${l.yPrompt.toFixed(1)}" textLength="${(promptLength(o) * l.advInfo).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${chars}</text>`);
+  T.push(`<text class="i" x="${l.xArt}" y="${l.yPrompt.toFixed(1)}" textLength="${(promptLength(o) * l.advInfo).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${chars}</text>`);
   // portrait rows
   portrait.forEach((cells, r) => {
     if (!cells.length) return;
     const y = l.yTop + r * FA + FA * 0.8;
-    P.push(`<text class="a" x="${l.xArt}" y="${y.toFixed(1)}"${op0} textLength="${(cells.length * l.advArt).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${tspans(cells)}${appear(tOut + rowDt * r)}</text>`);
+    T.push(`<text class="a" x="${l.xArt}" y="${y.toFixed(1)}"${op0} textLength="${(cells.length * l.advArt).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${tspans(cells)}${appear(tOut + rowDt * r)}</text>`);
   });
   // info block
   const info = (r: number, inner: string, n: number) =>
     `<text class="i" x="${l.xInfo}" y="${(l.yTop + r * l.lineInfo + l.baseOff).toFixed(1)}"${op0} textLength="${(n * l.advInfo).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${inner}${appear(tOut + rowDt * r)}</text>`;
-  P.push(info(0, `<tspan class="u">${escapeXml(o.userHost)}</tspan>`, len(o.userHost)));
-  P.push(info(1, `<tspan class="d">${"-".repeat(len(o.userHost))}</tspan>`, len(o.userHost)));
+  T.push(info(0, `<tspan class="u">${escapeXml(o.userHost)}</tspan>`, len(o.userHost)));
+  T.push(info(1, `<tspan class="d">${"-".repeat(len(o.userHost))}</tspan>`, len(o.userHost)));
   const kw = keyWidth(o);
   o.rows.forEach((row, j) => {
     const text = rowText(row, kw), k = `${row.key}:`.padEnd(kw + 2);
-    P.push(info(2 + j, `<tspan class="k">${escapeXml(k.trimEnd())}</tspan>${escapeXml(text.slice(k.trimEnd().length))}`, len(text)));
+    T.push(info(2 + j, `<tspan class="k">${escapeXml(k.trimEnd())}</tspan>${escapeXml(text.slice(k.trimEnd().length))}`, len(text)));
   });
   const base = 2 + o.rows.length + 1;
   // CGA strip: two rows of eight swatches, three cells wide each. Rects, so no glyph or font fallback is involved.
@@ -88,11 +89,14 @@ ${chrome.defs}
     const y = (l.yTop + (base + r) * l.lineInfo).toFixed(1), sw = 3 * l.advInfo;
     const rects = CGA.slice(r * 8, r * 8 + 8).map((c, i) =>
       `<rect x="${(l.xInfo + i * sw).toFixed(1)}" y="${y}" width="${sw.toFixed(1)}" height="${l.lineInfo.toFixed(1)}" fill="${c}"/>`).join("");
-    P.push(`<g${op0}>${rects}${appear(tOut + rowDt * (base + r))}</g>`);
+    T.push(`<g${op0}>${rects}${appear(tOut + rowDt * (base + r))}</g>`);
   }
   const cursor = anim ? `<tspan>█<animate attributeName="opacity" values="1;1;0;0" dur="1.1s" repeatCount="indefinite"/></tspan>` : "█";
-  P.push(`<text class="i" x="${l.xArt}" y="${l.yEnd.toFixed(1)}"${op0}><tspan class="u">${escapeXml(o.userHost)}</tspan>:~$ ${cursor}${appear(tEnd)}</text>`);
-  P.push("</g>");                                                       // glow
+  T.push(`<text class="i" x="${l.xArt}" y="${l.yEnd.toFixed(1)}"${op0}><tspan class="u">${escapeXml(o.userHost)}</tspan>:~$ ${cursor}${appear(tEnd)}</text>`);
+  // The glow is a blurred copy under the text rather than a filter on it: WebKit rasterises filtered
+  // groups at 1x and scales them up, which would blur the letters themselves on Retina screens.
+  const screenText = T.join("\n");
+  P.push(`<g filter="url(#glow)" aria-hidden="true">\n${screenText}\n</g>`, `<g>\n${screenText}\n</g>`);
   P.push(useMap ? `<g filter="url(#crt)">` : "<g>");
   P.push(`<rect x="${s.x - 4}" y="${s.y - 4}" width="${s.w + 8}" height="${s.h + 8}" fill="url(#scan)"/></g>`);
   P.push(chrome.after);
