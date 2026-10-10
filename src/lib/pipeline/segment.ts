@@ -9,5 +9,5 @@ export interface Segmenter {
 }
 
 export async function loadSegmenter(): Promise<Segmenter> {
-  throw new Error("not implemented: see docs/superpowers/specs/2026-10-10-whoamifetch-design.md");
+  throw new Error("not implemented yet");
 }

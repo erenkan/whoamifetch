@@ -11,7 +11,7 @@ import { DEFAULT_ROWS } from "@/lib/pipeline/svg";
 /**
  * Editor shell. Three panes: source (GitHub login or local photo), card editor (identity,
  * rows, looks), live preview (<img src="blob:..."> so it renders exactly like GitHub does).
- * The pipeline itself is not wired yet; see docs/superpowers/specs/.
+ * The pipeline itself is not wired yet.
  */
 export default function Home() {
   const [login, setLogin] = useState("");

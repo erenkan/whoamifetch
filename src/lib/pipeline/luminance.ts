@@ -14,7 +14,7 @@ import type { Grid, PortraitOptions } from "./types";
  */
 export function toGrid(image: ImageData, mask: Float32Array | null, opts: PortraitOptions): Grid {
   void image; void mask; void opts;
-  throw new Error("not implemented: see docs/superpowers/specs/2026-10-10-whoamifetch-design.md");
+  throw new Error("not implemented yet");
 }
 
 /** Character cell aspect for VT323: advance 0.4 em at a 1.0 em line height. */

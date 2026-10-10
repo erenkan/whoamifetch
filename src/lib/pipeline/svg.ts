@@ -8,7 +8,7 @@ import type { CardOptions, Cell } from "./types";
  */
 export function buildCard(rows: Cell[][], opts: CardOptions, fontBase64: string): string {
   void rows; void opts; void fontBase64;
-  throw new Error("not implemented: see docs/superpowers/specs/2026-10-10-whoamifetch-design.md");
+  throw new Error("not implemented yet");
 }
 
 export const DEFAULT_ROWS = [
