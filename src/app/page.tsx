@@ -1,22 +1,27 @@
 "use client";
 
-import Link from "next/link";
+import { AtSign, Image as ImageIcon, SlidersHorizontal } from "lucide-react";
 import { useMemo, useReducer, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { AppHeader } from "@/components/app-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { normalizeLogin } from "@/lib/github";
+import { layout } from "@/lib/pipeline/layout";
 import { previewCard } from "./editor/cardVariant";
-import { ExportBar } from "./editor/ExportBar";
-import { IdentityPanel } from "./editor/IdentityPanel";
-import { LooksPanel } from "./editor/LooksPanel";
-import { Preview } from "./editor/Preview";
-import { RowsEditor } from "./editor/RowsEditor";
-import { SourcePanel } from "./editor/SourcePanel";
+import { IdentityTab } from "./editor/IdentityTab";
+import { LookTab } from "./editor/LookTab";
+import { PhotoTab } from "./editor/PhotoTab";
+import { ShipIt } from "./editor/ShipIt";
+import { readmeSnippet } from "./editor/shipping";
+import { Stage, type Device } from "./editor/Stage";
 import { initialState, reducer } from "./editor/state";
 import { renderCard, useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
 
 /**
- * Editor. Left: source (GitHub login, local photo or initials), identity, rows, looks.
- * Right: the card as an <img> of the generated SVG (rendered the way GitHub renders it) and the export.
+ * Studio. Sidebar tabs: Photo (GitHub login, local photo or initials), Identity (prompt and rows),
+ * Look (presets, frame, colours, portrait tuning). Main column: the card as an <img> of the generated
+ * SVG (rendered the way GitHub renders it) and the export. On phones the preview comes first.
  */
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -25,36 +30,45 @@ export default function Home() {
   const [played, setPlayed] = useState<{ card: typeof state.card; portrait: typeof portrait } | null>(null);
   const playing = played?.card === state.card && played.portrait === portrait;
   const shown = useMemo(() => previewCard(state.card, playing), [state.card, playing]);
-  const url = useCardSvg(portrait, shown);
+  const { url, bytes } = useCardSvg(portrait, shown, state.card);
+  const size = useMemo(() => { const l = layout(portrait, shown); return { W: l.W, H: l.H }; }, [portrait, shown]);
+  const [device, setDevice] = useState<Device>("desktop");
+  const snippet = readmeSnippet(state.card.alt);
+  const copy = () => navigator.clipboard.writeText(snippet).then(
+    () => { toast("README snippet copied", { description: "Paste it into your profile README." }); },
+    () => { toast.error("Could not copy", { description: "Select the snippet and copy it by hand." }); },
+  );
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">whoamifetch</h1>
-        <p className="text-sm text-muted-foreground">
-          A retro terminal card for your GitHub profile README. Everything runs in your browser;
-          your photo never leaves this device. <Link href="/privacy/" className="underline underline-offset-2">Privacy</Link>
-        </p>
-      </header>
-
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="flex flex-col gap-6">
-          <SourcePanel state={state} dispatch={dispatch} />
-          <IdentityPanel state={state} dispatch={dispatch} />
-          <RowsEditor state={state} dispatch={dispatch} />
-          <LooksPanel state={state} dispatch={dispatch} />
-        </div>
-
-        <Card className="h-fit lg:sticky lg:top-6">
-          <CardHeader>
-            <CardTitle>Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Preview url={url} canPlay={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })} />
-            <ExportBar render={() => renderCard(portrait, state.card)} ready={!!url} alt={state.card.alt} />
-          </CardContent>
-        </Card>
+    <>
+      <AppHeader />
+      <div className="flex flex-1 flex-wrap items-stretch">
+        <aside className="order-2 flex w-full flex-col gap-5 border-t border-border bg-card p-5 wide:order-1 wide:w-[380px] wide:max-w-[380px] wide:flex-none wide:border-t-0 wide:border-r">
+          <Tabs defaultValue="photo">
+            <TabsList className="w-full">
+              <TabsTrigger value="photo"><ImageIcon className="size-[15px]" aria-hidden="true" /> Photo</TabsTrigger>
+              <TabsTrigger value="identity"><AtSign className="size-[15px]" aria-hidden="true" /> Identity</TabsTrigger>
+              <TabsTrigger value="look"><SlidersHorizontal className="size-[15px]" aria-hidden="true" /> Look</TabsTrigger>
+            </TabsList>
+            <TabsContent value="photo" className="flex flex-col gap-5 pt-5">
+              <PhotoTab state={state} dispatch={dispatch} portraitRows={portrait.length} />
+            </TabsContent>
+            <TabsContent value="identity" className="flex flex-col gap-5 pt-5">
+              <IdentityTab state={state} dispatch={dispatch} />
+            </TabsContent>
+            <TabsContent value="look" className="flex flex-col gap-5 pt-5">
+              <LookTab state={state} dispatch={dispatch} />
+            </TabsContent>
+          </Tabs>
+        </aside>
+        <main className="order-1 flex min-w-0 flex-1 basis-[560px] flex-col gap-5 p-4 wide:order-2 wide:px-8 wide:pt-6 wide:pb-8">
+          <Stage
+            url={url} bytes={bytes} size={size} animate={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })}
+            device={device} onDevice={setDevice} download={() => renderCard(portrait, state.card)} onCopy={copy}
+          />
+          <ShipIt login={state.source.kind === "github" ? normalizeLogin(state.source.login) : ""} snippet={snippet} onCopy={copy} />
+        </main>
       </div>
-    </main>
+    </>
   );
 }

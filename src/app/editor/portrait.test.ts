@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RAMP } from "@/lib/pipeline/ascii";
 import { cleanMask } from "@/lib/pipeline/mask";
 import { portraitCells } from "./portrait";
 import { initialState, type EditorState } from "./state";
@@ -26,6 +27,17 @@ describe("portraitCells", () => {
     const removed = portraitCells(s), kept = portraitCells({ ...s, removeBackground: false });
     expect(kept.length).toBe(removed.length);               // same 6:7 box, not the 4:1 strip
     expect(kept.length).toBeGreaterThan(30);
+  });
+  it("prints ink on a paper screen: a cell lit densely on green is blank on paper", () => {
+    const { photo, prob, w, h } = panorama(0.9);
+    const s: EditorState = { ...initialState, source: { ...initialState.source, kind: "upload", status: "ready" }, photo, prob, mask: { thr: 0.5, data: cleanMask(prob, w, h) } };
+    const green = portraitCells(s), paper = portraitCells({ ...s, card: { ...s.card, phosphor: "paper" } });
+    let lit = 0;
+    green.forEach((row, r) => row.forEach((c, k) => {
+      if (RAMP.indexOf(c.ch) < 8) return;                   // "%" and "@": the brightest cells
+      lit++; expect(RAMP.indexOf(paper[r]?.[k]?.ch ?? " ")).toBeLessThanOrEqual(1);
+    }));
+    expect(lit).toBeGreaterThan(0);
   });
   it("keeps the last good mask when the threshold slider would lose the person", () => {
     const { photo, prob, w, h } = panorama(0.7);

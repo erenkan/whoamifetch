@@ -3,13 +3,25 @@ import type { Cell, Grid } from "./types";
 /** Density ramp, darkest to brightest. */
 export const RAMP = " .:-=+*#%@";
 
-/** Grid → rows of cells (glyph by luminance, opacity in four phosphor steps), trailing blanks trimmed. */
-export function artRows(grid: Grid): Cell[][] {
+/**
+ * Grid → rows of cells (glyph by luminance, opacity in four steps), trailing blanks trimmed.
+ * Phosphor (default): bright pixels get dense, bright glyphs, as a screen lights up. Ink: dark
+ * pixels get dense, dark glyphs, as a print on paper; cells outside the subject stay blank.
+ */
+export function artRows(grid: Grid, ink = false, gamma = 1.4): Cell[][] {
   const out: Cell[][] = [];
   for (let r = 0; r < grid.rows; r++) {
     const cells: Cell[] = [];
     for (let c = 0; c < grid.cols; c++) {
-      const v = grid.data[r * grid.cols + c];
+      const i = r * grid.cols + c;
+      let v = grid.data[i];
+      if (ink) {
+        // Cells on the silhouette edge average subject and blanked background pixels, which would
+        // print as a dark rim: undo the coverage before inverting, then fade the edge cells out.
+        const cov = grid.cover ? grid.cover[i] : 1;
+        const inside = Math.min(1, Math.max(0, (cov - 0.35) / 0.3));
+        v = Math.pow(1 - Math.min(1, v / Math.max(cov, 0.15)), gamma) * inside;
+      }
       const ch = RAMP[Math.round(v * (RAMP.length - 1))];
       const op = v > 0.75 ? 1 : v > 0.5 ? 0.85 : v > 0.25 ? 0.7 : 0.55;
       cells.push({ ch, op });

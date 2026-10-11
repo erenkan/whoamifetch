@@ -9,13 +9,15 @@ export interface EditorState {
   source: { kind: SourceKind; login: string; status: "idle" | "loading" | "ready" | "failed"; error?: string; initials: string };
   photo: Raster | null; prob: Float32Array | null;
   mask: SubjectMask | null;                                // cleanMask(prob) at the threshold it was made with
+  sourceMeta: { label: string } | null;                    // the login or file name the loaded photo came from
   removeBackground: boolean; maskThreshold: number;
   card: CardOptions; portrait: PortraitOptions;
+  rowIds: string[];                                        // stable keys for the row editor, parallel to card.rows
 }
 export interface SubjectMask { thr: number; data: Uint8Array }
 export type Action =
   | { type: "SOURCE_KIND"; kind: SourceKind } | { type: "LOGIN"; login: string }
-  | { type: "SOURCE_LOADING" } | { type: "SOURCE_READY"; photo: Raster; prob: Float32Array | null; mask: SubjectMask | null }
+  | { type: "SOURCE_LOADING" } | { type: "SOURCE_READY"; photo: Raster; prob: Float32Array | null; mask: SubjectMask | null; label?: string }
   | { type: "SOURCE_FAILED"; error: string } | { type: "PREFILL"; profile: GitHubProfile }
   | { type: "CARD"; patch: Partial<CardOptions> } | { type: "PORTRAIT"; patch: Partial<PortraitOptions> }
   | { type: "ROW_SET"; index: number; row: InfoRow } | { type: "ROW_ADD" } | { type: "ROW_REMOVE"; index: number } | { type: "ROW_MOVE"; from: number; to: number }
@@ -23,10 +25,15 @@ export type Action =
   | { type: "INITIALS"; initials: string };
 
 export const MAX_ROWS = 12;
+let seq = 0;
+const nextRowId = () => `row-${seq++}`;
+const move = <T>(xs: T[], from: number, to: number) => { const out = [...xs]; const [m] = out.splice(from, 1); out.splice(to, 0, m); return out; };
+
 export const initialState: EditorState = {
   source: { kind: "github", login: "", status: "idle", initials: "ME" },
-  photo: null, prob: null, mask: null, removeBackground: true, maskThreshold: 0.5,
+  photo: null, prob: null, mask: null, sourceMeta: null, removeBackground: true, maskThreshold: 0.5,
   card: DEFAULT_CARD, portrait: DEFAULT_PORTRAIT,
+  rowIds: DEFAULT_CARD.rows.map(nextRowId),
 };
 
 const setRow = (rows: InfoRow[], key: string, value: string | null) =>
@@ -36,11 +43,11 @@ const initialsOf = (name: string | null, login: string) =>
 
 export function reducer(s: EditorState, a: Action): EditorState {
   switch (a.type) {
-    case "SOURCE_KIND": return { ...s, source: { ...s.source, kind: a.kind, status: "idle", error: undefined } };
+    case "SOURCE_KIND": return { ...s, sourceMeta: null, source: { ...s.source, kind: a.kind, status: "idle", error: undefined } };
     case "LOGIN": return { ...s, source: { ...s.source, login: a.login } };
     case "SOURCE_LOADING": return { ...s, source: { ...s.source, status: "loading", error: undefined } };
-    case "SOURCE_READY": return { ...s, photo: a.photo, prob: a.prob, mask: a.mask, source: { ...s.source, status: "ready", error: undefined } };
-    case "SOURCE_FAILED": return { ...s, photo: null, prob: null, mask: null, source: { ...s.source, kind: "none", status: "failed", error: a.error } };
+    case "SOURCE_READY": return { ...s, photo: a.photo, prob: a.prob, mask: a.mask, sourceMeta: a.label ? { label: a.label } : null, source: { ...s.source, status: "ready", error: undefined } };
+    case "SOURCE_FAILED": return { ...s, photo: null, prob: null, mask: null, sourceMeta: null, source: { ...s.source, kind: "none", status: "failed", error: a.error } };
     case "PREFILL": {
       const p = a.profile;
       let rows = setRow(s.card.rows, "Host", p.company?.replace(/^@/, "") ?? null);
@@ -48,15 +55,21 @@ export function reducer(s: EditorState, a: Action): EditorState {
       rows = setRow(rows, "Kernel", p.bio);
       return { ...s, card: { ...s.card, userHost: `${p.login}@github`, rows }, source: { ...s.source, initials: initialsOf(p.name, p.login) } };
     }
-    case "CARD": return { ...s, card: { ...s.card, ...a.patch } };
+    case "CARD": {
+      // A phosphor change keeps the keys readable: graphite keys on a paper screen, amber off it.
+      // An accent set in the same patch is the user's choice and wins.
+      const card = { ...s.card, ...a.patch };
+      if (a.patch.phosphor && !a.patch.accent) {
+        if (card.phosphor === "paper" && card.accent !== "graphite") card.accent = "graphite";
+        else if (card.phosphor !== "paper" && card.accent === "graphite") card.accent = "amber";
+      }
+      return { ...s, card };
+    }
     case "PORTRAIT": return { ...s, portrait: { ...s.portrait, ...a.patch } };
     case "ROW_SET": return { ...s, card: { ...s.card, rows: s.card.rows.map((r, i) => (i === a.index ? a.row : r)) } };
-    case "ROW_ADD": return s.card.rows.length >= MAX_ROWS ? s : { ...s, card: { ...s.card, rows: [...s.card.rows, { key: "Key", value: "" }] } };
-    case "ROW_REMOVE": return { ...s, card: { ...s.card, rows: s.card.rows.filter((_, i) => i !== a.index) } };
-    case "ROW_MOVE": {
-      const rows = [...s.card.rows]; const [m] = rows.splice(a.from, 1); rows.splice(a.to, 0, m);
-      return { ...s, card: { ...s.card, rows } };
-    }
+    case "ROW_ADD": return s.card.rows.length >= MAX_ROWS ? s : { ...s, rowIds: [...s.rowIds, nextRowId()], card: { ...s.card, rows: [...s.card.rows, { key: "Key", value: "" }] } };
+    case "ROW_REMOVE": return { ...s, rowIds: s.rowIds.filter((_, i) => i !== a.index), card: { ...s.card, rows: s.card.rows.filter((_, i) => i !== a.index) } };
+    case "ROW_MOVE": return { ...s, rowIds: move(s.rowIds, a.from, a.to), card: { ...s.card, rows: move(s.card.rows, a.from, a.to) } };
     case "PRESET": {
       const p = PRESETS.find((x) => x.id === a.id); if (!p) return s;
       return { ...s, card: { ...s.card, chrome: p.chrome, phosphor: p.phosphor, accent: p.accent } };

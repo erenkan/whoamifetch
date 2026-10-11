@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { layout } from "./layout";
 import { buildCard, DEFAULT_CARD, escapeXml } from "./svg";
-import { CGA } from "./themes";
+import { ACCENTS, CGA, PALETTES, PRESETS } from "./themes";
 
 const portrait = Array.from({ length: 5 }, () => Array.from({ length: 10 }, () => ({ ch: "#", op: 1 })));
 const assets = { fontBase64: "AAAA" };
@@ -34,7 +34,7 @@ describe("buildCard", () => {
     expect(svg.replace(/\sxmlns(?::\w+)?="[^"]*"/g, "")).not.toMatch(/https?:\/\//); // namespace URIs are not fetched
     expect(svg).not.toContain("<script");
   });
-  for (const chrome of ["crt", "macos", "win95"] as const) {
+  for (const chrome of ["crt", "macos", "win95", "macplus"] as const) {
     it(`renders the ${chrome} chrome as well-formed XML`, () => {
       const svg = buildCard(portrait, { ...DEFAULT_CARD, chrome }, { ...assets, displacementPng: "BBBB" });
       expect(svg.startsWith('<?xml version="1.0"')).toBe(true);
@@ -67,6 +67,34 @@ describe("buildCard", () => {
   });
 });
 
+describe("macplus frame and paper phosphor", () => {
+  it("labels the frame with the command only and uses no displacement map", () => {
+    const svg = buildCard(portrait, { ...DEFAULT_CARD, chrome: "macplus", command: "who & ami" }, { ...assets, displacementPng: "BBBB" });
+    expect(svg).not.toContain("feDisplacementMap");
+    expect(svg).toContain('style="fill:#6e6552">who &amp; ami</text>');
+    expect(svg).toContain('id="body-clip"');
+    expect(svg).not.toMatch(/Macintosh|Apple/);
+  });
+  it("paper: no glow pass, faint scanlines, soft vignette; green on the same frame is unchanged", () => {
+    const paper = buildCard(portrait, { ...DEFAULT_CARD, chrome: "macplus", phosphor: "paper", accent: "graphite" }, assets);
+    expect(paper).not.toContain('filter="url(#glow)"');
+    expect(paper).toContain('opacity="0.1"/></pattern>');
+    expect(paper).toContain('stop-opacity="0.18"');
+    expect(paper).toContain(".k{fill:#4d4d4d}");
+    expect(paper).toContain("fill:#1c1c1c");
+    const green = buildCard(portrait, { ...DEFAULT_CARD, chrome: "macplus" }, assets);
+    expect(green).toContain('filter="url(#glow)"');
+    expect(green).toContain('opacity="0.32"/></pattern>');
+    expect(green).toContain('stop-opacity="0.5"');
+  });
+  it("every preset points at a defined chrome, phosphor and accent", () => {
+    for (const p of PRESETS) {
+      expect(PALETTES[p.phosphor]).toBeDefined(); expect(ACCENTS[p.accent]).toBeDefined();
+      expect(buildCard(portrait, { ...DEFAULT_CARD, chrome: p.chrome, phosphor: p.phosphor, accent: p.accent }, assets)).toContain("</svg>");
+    }
+  });
+});
+
 describe("escapeXml", () => {
   it("escapes the five XML characters", () => { expect(escapeXml(`<&>"'`)).toBe("&lt;&amp;&gt;&quot;&#39;"); });
 });
@@ -88,7 +116,7 @@ describe("content edge cases", () => {
     ["60-character value", { rows: [{ key: "Bio", value: "x".repeat(60) }] }],
     ["emoji keys", { rows: [{ key: "🚀", value: "rocket" }, { key: "Ünï✨", value: "sparkles" }] }],
   ];
-  for (const [name, patch] of cases) for (const chrome of ["crt", "macos", "win95"] as const) for (const animate of [true, false]) {
+  for (const [name, patch] of cases) for (const chrome of ["crt", "macos", "win95", "macplus"] as const) for (const animate of [true, false]) {
     it(`${name}: ${chrome}${animate ? "" : ", static"} stays well-formed and keeps the prompt below the content`, () => {
       const o = { ...DEFAULT_CARD, ...patch, chrome, animate };
       const tall = Array.from({ length: 47 }, () => Array.from({ length: 100 }, () => ({ ch: "#", op: 1 })));

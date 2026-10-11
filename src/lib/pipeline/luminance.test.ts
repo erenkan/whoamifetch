@@ -15,6 +15,12 @@ describe("portraitGrid against the Python prototype", () => {
   it("has the golden shape", () => {
     expect(grid.cols).toBe(golden.cols); expect(grid.rows).toBe(golden.rows);
   });
+  it("reports how much of each cell is subject (0..1), for printing in ink", () => {
+    expect(grid.cover).toHaveLength(grid.cols * grid.rows);
+    const cover = Array.from(grid.cover!);
+    expect(cover.every((v) => v >= 0 && v <= 1)).toBe(true);
+    expect(cover.some((v) => v > 0.9)).toBe(true); expect(cover.some((v) => v < 0.1)).toBe(true);
+  });
   it("is close to the golden luminance (MAE < 0.08)", () => {
     let mae = 0; for (let i = 0; i < grid.data.length; i++) mae += Math.abs(grid.data[i] - golden.data[i]);
     expect(mae / grid.data.length).toBeLessThan(0.08);

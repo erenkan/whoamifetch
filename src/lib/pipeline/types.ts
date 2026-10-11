@@ -1,8 +1,8 @@
 /** Shared types for the whoamifetch pipeline (photo → luminance grid → ASCII rows → SVG). */
 
-export type Phosphor = "green" | "amber" | "white";
-export type Accent = "amber" | "cyan" | "green" | "white";
-export type Chrome = "crt" | "macos" | "win95";
+export type Phosphor = "green" | "amber" | "white" | "paper";
+export type Accent = "amber" | "cyan" | "green" | "white" | "graphite";
+export type Chrome = "crt" | "macos" | "win95" | "macplus";
 
 export interface InfoRow {
   key: string;   // "OS", "Host", ... (rendered as "Key:" in the accent colour)
@@ -48,6 +48,7 @@ export interface Grid {
   cols: number;
   rows: number;
   data: Float32Array;
+  cover?: Float32Array; // mean subject-mask weight per cell, 0..1 (absent = every cell is subject)
 }
 
 /** RGBA pixels. Structurally identical to the DOM's ImageData so browser code can pass one in. */

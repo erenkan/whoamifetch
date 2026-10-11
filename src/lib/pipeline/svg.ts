@@ -51,8 +51,8 @@ text{font-family:"VT323",ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospac
 ${anim ? "@media (prefers-reduced-motion:reduce){[opacity=\"0\"]{opacity:1 !important}}" : ""}
 </style>
 <radialGradient id="scr" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="${pal.screen0}"/><stop offset="1" stop-color="${pal.screen1}"/></radialGradient>
-<radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.5"/></radialGradient>
-<pattern id="scan" width="2" height="3" patternUnits="userSpaceOnUse"><rect width="2" height="1" fill="#000" opacity="0.32"/></pattern>
+<radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${pal.paper ? 0.18 : 0.5}"/></radialGradient>
+<pattern id="scan" width="2" height="3" patternUnits="userSpaceOnUse"><rect width="2" height="1" fill="#000" opacity="${pal.paper ? 0.1 : 0.32}"/></pattern>
 <filter id="glow" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.1"/></filter>
 ${useMap ? `<filter id="crt" x="0" y="0" width="${W}" height="${H}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,${assets.displacementPng}" xlink:href="data:image/png;base64,${assets.displacementPng}" x="${s.x - scale}" y="${s.y - scale}" width="${s.w + 2 * scale}" height="${s.h + 2 * scale}" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter>` : ""}
 ${chrome.defs}
@@ -95,8 +95,10 @@ ${chrome.defs}
   T.push(`<text class="i" x="${l.xArt}" y="${l.yEnd.toFixed(1)}"${op0}><tspan class="u">${escapeXml(o.userHost)}</tspan>:~$ ${cursor}${appear(tEnd)}</text>`);
   // The glow is a blurred copy under the text rather than a filter on it: WebKit rasterises filtered
   // groups at 1x and scales them up, which would blur the letters themselves on Retina screens.
+  // A paper screen gets no glow: dark text on a light ground would only smudge.
   const screenText = T.join("\n");
-  P.push(`<g filter="url(#glow)" aria-hidden="true">\n${screenText}\n</g>`, `<g>\n${screenText}\n</g>`);
+  if (!pal.paper) P.push(`<g filter="url(#glow)" aria-hidden="true">\n${screenText}\n</g>`);
+  P.push(`<g>\n${screenText}\n</g>`);
   P.push(useMap ? `<g filter="url(#crt)">` : "<g>");
   P.push(`<rect x="${s.x - 4}" y="${s.y - 4}" width="${s.w + 8}" height="${s.h + 8}" fill="url(#scan)"/></g>`);
   P.push(chrome.after);
