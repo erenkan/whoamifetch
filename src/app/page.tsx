@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { normalizeLogin } from "@/lib/github";
+import { layout } from "@/lib/pipeline/layout";
 import { previewCard } from "./editor/cardVariant";
 import { IdentityTab } from "./editor/IdentityTab";
 import { LookTab } from "./editor/LookTab";
@@ -30,6 +31,7 @@ export default function Home() {
   const playing = played?.card === state.card && played.portrait === portrait;
   const shown = useMemo(() => previewCard(state.card, playing), [state.card, playing]);
   const { url, bytes } = useCardSvg(portrait, shown, state.card);
+  const size = useMemo(() => { const l = layout(portrait, shown); return { W: l.W, H: l.H }; }, [portrait, shown]);
   const [device, setDevice] = useState<Device>("desktop");
   const snippet = readmeSnippet(state.card.alt);
   const copy = () => navigator.clipboard.writeText(snippet).then(
@@ -61,7 +63,7 @@ export default function Home() {
         </aside>
         <main className="order-1 flex min-w-0 flex-1 basis-[560px] flex-col gap-5 p-4 wide:order-2 wide:px-8 wide:pt-6 wide:pb-8">
           <Stage
-            url={url} bytes={bytes} animate={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })}
+            url={url} bytes={bytes} size={size} animate={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })}
             device={device} onDevice={setDevice} download={() => renderCard(portrait, state.card)} onCopy={copy}
           />
           <ShipIt login={state.source.kind === "github" ? normalizeLogin(state.source.login) : ""} snippet={snippet} onCopy={copy} />

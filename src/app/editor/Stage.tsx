@@ -12,11 +12,11 @@ export type Device = "desktop" | "mobile";
 
 /**
  * The card as GitHub shows it: an <img> of the generated SVG, static while editing ("Play animation"
- * plays the reveal once), at the README column width or at phone width. Below it the download and
- * the README snippet.
+ * plays the reveal once), at the README column width or at phone width, and never taller than the
+ * viewport leaves room for (tall frames shrink to fit). Below it the download and the README snippet.
  */
-export function Stage({ url, bytes, animate, onPlay, device, onDevice, download, onCopy }: {
-  url: string | null; bytes: number; animate: boolean; onPlay: () => void;
+export function Stage({ url, bytes, size, animate, onPlay, device, onDevice, download, onCopy }: {
+  url: string | null; bytes: number; size: { W: number; H: number }; animate: boolean; onPlay: () => void;
   device: Device; onDevice: (d: Device) => void; download: () => Promise<string>; onCopy: () => void;
 }) {
   const [nonce, setNonce] = useState(0);   // a new key reloads the <img>, restarting the SMIL timeline
@@ -56,10 +56,16 @@ export function Stage({ url, bytes, animate, onPlay, device, onDevice, download,
           // eslint-disable-next-line @next/next/no-img-element -- a blob: SVG in <img> renders exactly as GitHub renders the README
           <img
             key={nonce} src={url} alt="Live preview of your whoami card"
-            className={cn("block h-auto w-full max-w-[900px] rounded-xl shadow-[0_24px_60px_-20px_rgba(0,0,0,.6)]", mobile && "wide:w-[350px]")}
+            className={cn(
+              "block h-auto max-h-[calc(100vh_-_13rem)] w-auto max-w-[min(100%,900px)] rounded-xl shadow-[0_24px_60px_-20px_rgba(0,0,0,.6)]",
+              mobile && "wide:max-w-[min(100%,350px)]",
+            )}
           />
         ) : (
-          <Skeleton className="w-full max-w-[900px] rounded-xl" style={{ aspectRatio: "900 / 556" }} />
+          <Skeleton
+            className="max-w-full rounded-xl"
+            style={{ aspectRatio: `${size.W} / ${size.H}`, width: `min(100%, ${mobile ? 350 : 900}px, calc((100vh - 13rem) * ${(size.W / size.H).toFixed(4)}))` }}
+          />
         )}
         <span className={cn("text-xs text-muted-foreground", mobile && "wide:hidden")}>Scales with the README column: 832 px on a desktop profile page, about 350 px on phones.</span>
         {mobile && <span className="hidden text-xs text-muted-foreground wide:inline">Shown at 350 px, roughly what a phone renders.</span>}
