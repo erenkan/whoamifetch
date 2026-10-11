@@ -16,22 +16,29 @@ export async function renderCard(portrait: Cell[][], card: CardOptions): Promise
   return buildCard(portrait, card, { fontBase64, displacementPng: dmap });
 }
 
-/** A Blob URL of the card for the preview <img>; card edits are applied at most every 150 ms. */
-export function useCardSvg(portrait: Cell[][], cardNow: CardOptions) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [card, setCard] = useState(cardNow);
-  useEffect(() => { const t = setTimeout(() => setCard(cardNow), 150); return () => clearTimeout(t); }, [cardNow]);
+const utf8Length = (s: string) => new TextEncoder().encode(s).length;
+
+/**
+ * A Blob URL of the preview card for the <img>, and the size of the file a download produces (the
+ * exported card can differ from the preview: it animates when the Animation switch is on).
+ * Card edits are applied at most every 150 ms.
+ */
+export function useCardSvg(portrait: Cell[][], previewNow: CardOptions, exportNow: CardOptions = previewNow) {
+  const [out, setOut] = useState<{ url: string | null; bytes: number }>({ url: null, bytes: 0 });
+  const [cards, setCards] = useState({ preview: previewNow, exported: exportNow });
+  useEffect(() => { const t = setTimeout(() => setCards({ preview: previewNow, exported: exportNow }), 150); return () => clearTimeout(t); }, [previewNow, exportNow]);
   const last = useRef<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const svg = await renderCard(portrait, card);
+      const svg = await renderCard(portrait, cards.preview);
+      const bytes = cards.exported === cards.preview ? utf8Length(svg) : utf8Length(await renderCard(portrait, cards.exported));
       if (cancelled) return;
       const next = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
       if (last.current) URL.revokeObjectURL(last.current);
-      last.current = next; setUrl(next);
+      last.current = next; setOut({ url: next, bytes });
     })();
     return () => { cancelled = true; };
-  }, [portrait, card]);
-  return url;
+  }, [portrait, cards]);
+  return out;
 }

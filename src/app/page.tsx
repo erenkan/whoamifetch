@@ -2,14 +2,17 @@
 
 import { AtSign, Image as ImageIcon, SlidersHorizontal } from "lucide-react";
 import { useMemo, useReducer, useState } from "react";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { normalizeLogin } from "@/lib/github";
 import { previewCard } from "./editor/cardVariant";
-import { ExportBar } from "./editor/ExportBar";
 import { IdentityTab } from "./editor/IdentityTab";
 import { LookTab } from "./editor/LookTab";
 import { PhotoTab } from "./editor/PhotoTab";
-import { Preview } from "./editor/Preview";
+import { ShipIt } from "./editor/ShipIt";
+import { readmeSnippet } from "./editor/shipping";
+import { Stage, type Device } from "./editor/Stage";
 import { initialState, reducer } from "./editor/state";
 import { renderCard, useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
@@ -26,7 +29,13 @@ export default function Home() {
   const [played, setPlayed] = useState<{ card: typeof state.card; portrait: typeof portrait } | null>(null);
   const playing = played?.card === state.card && played.portrait === portrait;
   const shown = useMemo(() => previewCard(state.card, playing), [state.card, playing]);
-  const url = useCardSvg(portrait, shown);
+  const { url, bytes } = useCardSvg(portrait, shown, state.card);
+  const [device, setDevice] = useState<Device>("desktop");
+  const snippet = readmeSnippet(state.card.alt);
+  const copy = () => navigator.clipboard.writeText(snippet).then(
+    () => { toast("README snippet copied", { description: "Paste it into your profile README." }); },
+    () => { toast.error("Could not copy", { description: "Select the snippet and copy it by hand." }); },
+  );
 
   return (
     <>
@@ -51,8 +60,11 @@ export default function Home() {
           </Tabs>
         </aside>
         <main className="order-1 flex min-w-0 flex-1 basis-[560px] flex-col gap-5 p-4 wide:order-2 wide:px-8 wide:pt-6 wide:pb-8">
-          <Preview url={url} canPlay={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })} />
-          <ExportBar render={() => renderCard(portrait, state.card)} ready={!!url} alt={state.card.alt} />
+          <Stage
+            url={url} bytes={bytes} animate={state.card.animate} onPlay={() => setPlayed({ card: state.card, portrait })}
+            device={device} onDevice={setDevice} download={() => renderCard(portrait, state.card)} onCopy={copy}
+          />
+          <ShipIt login={state.source.kind === "github" ? normalizeLogin(state.source.login) : ""} snippet={snippet} onCopy={copy} />
         </main>
       </div>
     </>
