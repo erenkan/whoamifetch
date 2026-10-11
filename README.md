@@ -2,8 +2,18 @@
 
 Turn your photo and a few lines about yourself into a retro terminal card for your GitHub
 profile README: an ASCII portrait printed by `whoami`, neofetch-style, on a curved CRT
-monitor (or a macOS terminal window). Output is a single animated SVG you commit to your
-`<username>/<username>` repository.
+monitor, a terminal window, a Windows 95 window or a Mac Plus with a 1-bit paper screen. Output
+is a single animated SVG you commit to your `<username>/<username>` repository.
+
+## Using it
+
+The editor has three tabs. **Photo** takes your GitHub avatar, an uploaded photo or just your
+initials, and removes the background. **Identity** sets the prompt and the info rows; drag a row's
+handle (or focus it and use Space and the arrow keys) to reorder. **Look** picks a preset, the
+frame, the phosphor and key colours, the portrait size and the animation. The preview shows the
+card as GitHub renders it, at desktop or phone width; download `whoami.svg`, copy the README
+snippet and follow the three steps under it. The header toggles between the dark and the light
+theme.
 
 **Privacy.** Everything runs in your browser. The only network requests the page can make are
 to `api.github.com` (optional profile prefill) and `avatars.githubusercontent.com` (your public

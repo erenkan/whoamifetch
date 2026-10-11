@@ -30,7 +30,7 @@ export function ShipIt({ login, snippet, onCopy }: { login: string; snippet: str
       </ol>
       <div className="relative">
         <pre className="overflow-x-auto rounded-md border border-border bg-muted py-3 pr-11 pl-3.5 font-mono text-[13px] leading-relaxed">{snippet}</pre>
-        <Button type="button" variant="ghost" size="icon-sm" className="absolute top-2 right-2 text-muted-foreground" aria-label="Copy snippet" onClick={onCopy}><Copy /></Button>
+        <Button type="button" variant="ghost" size="icon-sm" className="absolute top-2 right-2 bg-muted text-muted-foreground" aria-label="Copy snippet" onClick={onCopy}><Copy /></Button>
       </div>
     </Card>
   );
