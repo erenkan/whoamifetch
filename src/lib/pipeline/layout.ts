@@ -1,7 +1,7 @@
 import type { CardOptions, Cell } from "./types";
 
 export const ADV = 0.4, ASC = 0.8;   // VT323: advance 0.4 em, ascent 0.8 em, line height 1.0 em
-const INSETS = { crt: { l: 30, t: 26, b: 46 }, macos: { l: 6, t: 38, b: 6 }, win95: { l: 10, t: 34, b: 10 }, macplus: { l: 44, t: 44, b: 140 } } as const;
+const INSETS = { crt: { l: 30, t: 26, b: 46 }, macos: { l: 6, t: 38, b: 6 }, win95: { l: 10, t: 34, b: 10 }, macplus: { l: 70, t: 80, b: 228 } } as const;
 
 export interface Layout {
   W: number; H: number; screen: { x: number; y: number; w: number; h: number }; pad: number;

@@ -23,7 +23,7 @@ describe("layout", () => {
   });
   it("macplus keeps a front panel under the screen", () => {
     const l = layout(portrait(10), { ...DEFAULT_CARD, chrome: "macplus" });
-    expect(l.screen).toEqual({ x: 44, y: 44, w: l.W - 88, h: l.H - 44 - 140 });
+    expect(l.screen).toEqual({ x: 70, y: 80, w: l.W - 140, h: l.H - 80 - 228 });
     expect(l.W).toBe(900);
   });
 });

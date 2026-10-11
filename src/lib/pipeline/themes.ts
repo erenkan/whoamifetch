@@ -14,7 +14,7 @@ export const PALETTES: Record<Phosphor, Palette> = {
   green: { fg: "#3dff6e", key: "#ffb000", cmd: "#9dffb8", screen0: "#0b140c", screen1: "#030603" },
   amber: { fg: "#ffb000", key: "#ffe3a3", cmd: "#ffd36b", screen0: "#1a1100", screen1: "#0a0600" },
   white: { fg: "#e8e8e8", key: "#ffb000", cmd: "#ffffff", screen0: "#111111", screen1: "#050505" },
-  paper: { fg: "#1c1c1c", key: "#4d4d4d", cmd: "#1c1c1c", screen0: "#f1f0e6", screen1: "#d3d2c4", paper: true },
+  paper: { fg: "#1c1c1c", key: "#4d4d4d", cmd: "#1c1c1c", screen0: "#f1f0e6", screen1: "#e4e3d8", paper: true },
 };
 
 export const ACCENTS: Record<Accent, string> = {
