@@ -188,7 +188,7 @@ export function PhotoTab({ state, dispatch, portraitRows }: { state: EditorState
           </div>
           <div className="rounded-md border border-border bg-background px-3 py-2.5">
             <div className="font-mono text-lg font-medium whitespace-pre">{RAMP}</div>
-            <div className="text-xs text-muted-foreground">glyph ramp, dark to bright</div>
+            <div className="text-xs text-muted-foreground">glyph ramp, sparse to dense</div>
           </div>
         </div>
       </div>

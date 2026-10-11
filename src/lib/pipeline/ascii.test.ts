@@ -9,6 +9,17 @@ describe("artRows", () => {
     expect(rows[0][2].op).toBe(1);
     expect(rows[0][0].op).toBe(0.55);
   });
+  it("prints ink on paper: dark pixels get dense glyphs, cells outside the subject stay blank", () => {
+    const grid = { cols: 3, rows: 1, data: Float32Array.from([0.1, 0.9, 0.1]), cover: Float32Array.from([1, 1, 0]) };
+    expect(artRows(grid)[0].map((c) => c.ch).join("")).toBe(".%.");
+    const ink = artRows(grid, true);
+    expect(ink[0].map((c) => c.ch)).toEqual(["%"]);         // 0.9^1.4 = 0.863; the bright cell and the uncovered one are blank
+    expect(ink[0][0].op).toBe(1);
+  });
+  it("ink without a cover treats every cell as subject", () => {
+    const grid = { cols: 2, rows: 1, data: Float32Array.from([0.9, 0.1]) };
+    expect(artRows(grid, true)[0].map((c) => c.ch).join("")).toBe(" %");
+  });
 });
 
 describe("initialsRows", () => {

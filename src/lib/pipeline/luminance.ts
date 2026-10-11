@@ -30,7 +30,7 @@ export function toGrid(p: Prepped, opts: PortraitOptions): Grid {
   const mean = resizeArea(p.plane, p.w, p.h, cols, rows);
   const mn = opts.dark > 0 ? minPool(p.plane, p.w, p.h, cols, rows) : mean;
   const mg = resizeArea(p.weights, p.w, p.h, cols, rows);
-  const data = new Float32Array(cols * rows);
+  const data = new Float32Array(cols * rows), cover = new Float32Array(cols * rows);
   for (let r = 0; r < rows; r++) {
     const rf = rows > 1 ? r / (rows - 1) : 0;
     const floorW = Math.min(1, Math.max(0, (opts.floorUntil - rf) / 0.08));
@@ -40,9 +40,10 @@ export function toGrid(p: Prepped, opts: PortraitOptions): Grid {
       v = sCurve(knee(v, opts.knee), opts.contrast);
       const inside = Math.min(1, Math.max(0, (mg[i] - 0.35) / 0.3));
       data[i] = Math.max(v, opts.floor * floorW * inside);
+      cover[i] = mg[i];
     }
   }
-  return { cols, rows, data };
+  return { cols, rows, data, cover };
 }
 
 /**

@@ -48,6 +48,7 @@ export interface Grid {
   cols: number;
   rows: number;
   data: Float32Array;
+  cover?: Float32Array; // mean subject-mask weight per cell, 0..1 (absent = every cell is subject)
 }
 
 /** RGBA pixels. Structurally identical to the DOM's ImageData so browser code can pass one in. */
