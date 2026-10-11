@@ -8,9 +8,9 @@ import { previewCard } from "./editor/cardVariant";
 import { ExportBar } from "./editor/ExportBar";
 import { IdentityPanel } from "./editor/IdentityPanel";
 import { LooksPanel } from "./editor/LooksPanel";
+import { PhotoTab } from "./editor/PhotoTab";
 import { Preview } from "./editor/Preview";
 import { RowsEditor } from "./editor/RowsEditor";
-import { SourcePanel } from "./editor/SourcePanel";
 import { initialState, reducer } from "./editor/state";
 import { renderCard, useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
@@ -41,7 +41,7 @@ export default function Home() {
               <TabsTrigger value="look"><SlidersHorizontal className="size-[15px]" aria-hidden="true" /> Look</TabsTrigger>
             </TabsList>
             <TabsContent value="photo" className="flex flex-col gap-5 pt-5">
-              <SourcePanel state={state} dispatch={dispatch} />
+              <PhotoTab state={state} dispatch={dispatch} portraitRows={portrait.length} />
             </TabsContent>
             <TabsContent value="identity" className="flex flex-col gap-5 pt-5">
               <IdentityPanel state={state} dispatch={dispatch} />

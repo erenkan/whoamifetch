@@ -13,6 +13,14 @@ describe("editor reducer", () => {
     const s = reducer(initialState, { type: "SOURCE_READY", photo, prob: Float32Array.from([0.9, 0.1]), mask });
     expect(s.mask).toBe(mask); expect(s.source.status).toBe("ready");
   });
+  it("SOURCE_READY records where the photo came from; a new source kind or a failure clears it", () => {
+    const photo = { width: 2, height: 1, data: new Uint8ClampedArray(8) };
+    const s = reducer(initialState, { type: "SOURCE_READY", photo, prob: null, mask: null, label: "photo.jpg" });
+    expect(s.sourceMeta).toEqual({ label: "photo.jpg" });
+    expect(reducer(s, { type: "SOURCE_KIND", kind: "github" }).sourceMeta).toBeNull();
+    expect(reducer(s, { type: "SOURCE_FAILED", error: "x" }).sourceMeta).toBeNull();
+    expect(initialState.sourceMeta).toBeNull();
+  });
   it("PREFILL fills userHost, Host, Location, Kernel and initials without touching other rows", () => {
     const s = reducer(initialState, { type: "PREFILL", profile: { login: "test-user", name: "Test User", bio: "Test bio", company: "@test-org", location: "Test City", avatarUrl: "", hasCustomAvatar: true } });
     expect(s.card.userHost).toBe("test-user@github");

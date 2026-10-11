@@ -9,13 +9,14 @@ export interface EditorState {
   source: { kind: SourceKind; login: string; status: "idle" | "loading" | "ready" | "failed"; error?: string; initials: string };
   photo: Raster | null; prob: Float32Array | null;
   mask: SubjectMask | null;                                // cleanMask(prob) at the threshold it was made with
+  sourceMeta: { label: string } | null;                    // the login or file name the loaded photo came from
   removeBackground: boolean; maskThreshold: number;
   card: CardOptions; portrait: PortraitOptions;
 }
 export interface SubjectMask { thr: number; data: Uint8Array }
 export type Action =
   | { type: "SOURCE_KIND"; kind: SourceKind } | { type: "LOGIN"; login: string }
-  | { type: "SOURCE_LOADING" } | { type: "SOURCE_READY"; photo: Raster; prob: Float32Array | null; mask: SubjectMask | null }
+  | { type: "SOURCE_LOADING" } | { type: "SOURCE_READY"; photo: Raster; prob: Float32Array | null; mask: SubjectMask | null; label?: string }
   | { type: "SOURCE_FAILED"; error: string } | { type: "PREFILL"; profile: GitHubProfile }
   | { type: "CARD"; patch: Partial<CardOptions> } | { type: "PORTRAIT"; patch: Partial<PortraitOptions> }
   | { type: "ROW_SET"; index: number; row: InfoRow } | { type: "ROW_ADD" } | { type: "ROW_REMOVE"; index: number } | { type: "ROW_MOVE"; from: number; to: number }
@@ -25,7 +26,7 @@ export type Action =
 export const MAX_ROWS = 12;
 export const initialState: EditorState = {
   source: { kind: "github", login: "", status: "idle", initials: "ME" },
-  photo: null, prob: null, mask: null, removeBackground: true, maskThreshold: 0.5,
+  photo: null, prob: null, mask: null, sourceMeta: null, removeBackground: true, maskThreshold: 0.5,
   card: DEFAULT_CARD, portrait: DEFAULT_PORTRAIT,
 };
 
@@ -36,11 +37,11 @@ const initialsOf = (name: string | null, login: string) =>
 
 export function reducer(s: EditorState, a: Action): EditorState {
   switch (a.type) {
-    case "SOURCE_KIND": return { ...s, source: { ...s.source, kind: a.kind, status: "idle", error: undefined } };
+    case "SOURCE_KIND": return { ...s, sourceMeta: null, source: { ...s.source, kind: a.kind, status: "idle", error: undefined } };
     case "LOGIN": return { ...s, source: { ...s.source, login: a.login } };
     case "SOURCE_LOADING": return { ...s, source: { ...s.source, status: "loading", error: undefined } };
-    case "SOURCE_READY": return { ...s, photo: a.photo, prob: a.prob, mask: a.mask, source: { ...s.source, status: "ready", error: undefined } };
-    case "SOURCE_FAILED": return { ...s, photo: null, prob: null, mask: null, source: { ...s.source, kind: "none", status: "failed", error: a.error } };
+    case "SOURCE_READY": return { ...s, photo: a.photo, prob: a.prob, mask: a.mask, sourceMeta: a.label ? { label: a.label } : null, source: { ...s.source, status: "ready", error: undefined } };
+    case "SOURCE_FAILED": return { ...s, photo: null, prob: null, mask: null, sourceMeta: null, source: { ...s.source, kind: "none", status: "failed", error: a.error } };
     case "PREFILL": {
       const p = a.profile;
       let rows = setRow(s.card.rows, "Host", p.company?.replace(/^@/, "") ?? null);

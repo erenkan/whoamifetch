@@ -17,3 +17,13 @@ export async function fetchAvatarRaster(url: string): Promise<Raster> {
   if (!res.ok) throw new AvatarCorsError(`HTTP ${res.status}`);
   return rasterFromBlob(await res.blob());
 }
+
+/** A small square, centre-cropped PNG of the photo as a data: URL (for the "loaded" chip; no request). */
+export function rasterThumbnail(r: Raster, side = 56): string {
+  const src = document.createElement("canvas"); src.width = r.width; src.height = r.height;
+  src.getContext("2d")!.putImageData(new ImageData(r.data, r.width, r.height), 0, 0);
+  const out = document.createElement("canvas"); out.width = out.height = side;
+  const s = Math.min(r.width, r.height);
+  out.getContext("2d")!.drawImage(src, (r.width - s) / 2, (r.height - s) / 2, s, s, 0, 0, side, side);
+  return out.toDataURL("image/png");
+}
