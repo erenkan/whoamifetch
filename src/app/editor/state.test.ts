@@ -47,6 +47,26 @@ describe("editor reducer", () => {
     s = reducer(s, { type: "ROW_REMOVE", index: 2 });
     expect(s.card.rows.length).toBe(initialState.card.rows.length);
   });
+  it("keeps rowIds parallel to rows through add, move and remove", () => {
+    let s = initialState;
+    expect(s.rowIds).toHaveLength(s.card.rows.length);
+    expect(new Set(s.rowIds).size).toBe(s.rowIds.length);
+    s = reducer(s, { type: "ROW_ADD" });
+    expect(s.rowIds).toHaveLength(s.card.rows.length);
+    expect(new Set(s.rowIds).size).toBe(s.rowIds.length);
+    const [first, second] = s.rowIds;
+    s = reducer(s, { type: "ROW_MOVE", from: 0, to: 1 });
+    expect(s.rowIds[0]).toBe(second); expect(s.rowIds[1]).toBe(first);
+    expect(s.card.rows[1].key).toBe(initialState.card.rows[0].key);
+    s = reducer(s, { type: "ROW_REMOVE", index: 1 });
+    expect(s.rowIds).not.toContain(first);
+    expect(s.rowIds).toHaveLength(s.card.rows.length);
+  });
+  it("prefill never changes the number of rows or their ids", () => {
+    const s = reducer(initialState, { type: "PREFILL", profile: { login: "test-user", name: "Test User", bio: "Test bio", company: "@test-org", location: "Test City", avatarUrl: "", hasCustomAvatar: true } });
+    expect(s.rowIds).toEqual(initialState.rowIds);
+    expect(s.card.rows).toHaveLength(initialState.card.rows.length);
+  });
   it("PRESET sets the three theme axes", () => {
     const s = reducer(initialState, { type: "PRESET", id: "win95-green" });
     expect(s.card.chrome).toBe("win95"); expect(s.card.phosphor).toBe("green"); expect(s.card.accent).toBe("amber");

@@ -12,6 +12,7 @@ export interface EditorState {
   sourceMeta: { label: string } | null;                    // the login or file name the loaded photo came from
   removeBackground: boolean; maskThreshold: number;
   card: CardOptions; portrait: PortraitOptions;
+  rowIds: string[];                                        // stable keys for the row editor, parallel to card.rows
 }
 export interface SubjectMask { thr: number; data: Uint8Array }
 export type Action =
@@ -24,10 +25,15 @@ export type Action =
   | { type: "INITIALS"; initials: string };
 
 export const MAX_ROWS = 12;
+let seq = 0;
+const nextRowId = () => `row-${seq++}`;
+const move = <T>(xs: T[], from: number, to: number) => { const out = [...xs]; const [m] = out.splice(from, 1); out.splice(to, 0, m); return out; };
+
 export const initialState: EditorState = {
   source: { kind: "github", login: "", status: "idle", initials: "ME" },
   photo: null, prob: null, mask: null, sourceMeta: null, removeBackground: true, maskThreshold: 0.5,
   card: DEFAULT_CARD, portrait: DEFAULT_PORTRAIT,
+  rowIds: DEFAULT_CARD.rows.map(nextRowId),
 };
 
 const setRow = (rows: InfoRow[], key: string, value: string | null) =>
@@ -52,12 +58,9 @@ export function reducer(s: EditorState, a: Action): EditorState {
     case "CARD": return { ...s, card: { ...s.card, ...a.patch } };
     case "PORTRAIT": return { ...s, portrait: { ...s.portrait, ...a.patch } };
     case "ROW_SET": return { ...s, card: { ...s.card, rows: s.card.rows.map((r, i) => (i === a.index ? a.row : r)) } };
-    case "ROW_ADD": return s.card.rows.length >= MAX_ROWS ? s : { ...s, card: { ...s.card, rows: [...s.card.rows, { key: "Key", value: "" }] } };
-    case "ROW_REMOVE": return { ...s, card: { ...s.card, rows: s.card.rows.filter((_, i) => i !== a.index) } };
-    case "ROW_MOVE": {
-      const rows = [...s.card.rows]; const [m] = rows.splice(a.from, 1); rows.splice(a.to, 0, m);
-      return { ...s, card: { ...s.card, rows } };
-    }
+    case "ROW_ADD": return s.card.rows.length >= MAX_ROWS ? s : { ...s, rowIds: [...s.rowIds, nextRowId()], card: { ...s.card, rows: [...s.card.rows, { key: "Key", value: "" }] } };
+    case "ROW_REMOVE": return { ...s, rowIds: s.rowIds.filter((_, i) => i !== a.index), card: { ...s.card, rows: s.card.rows.filter((_, i) => i !== a.index) } };
+    case "ROW_MOVE": return { ...s, rowIds: move(s.rowIds, a.from, a.to), card: { ...s.card, rows: move(s.card.rows, a.from, a.to) } };
     case "PRESET": {
       const p = PRESETS.find((x) => x.id === a.id); if (!p) return s;
       return { ...s, card: { ...s.card, chrome: p.chrome, phosphor: p.phosphor, accent: p.accent } };

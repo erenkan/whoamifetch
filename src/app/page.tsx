@@ -6,11 +6,10 @@ import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { previewCard } from "./editor/cardVariant";
 import { ExportBar } from "./editor/ExportBar";
-import { IdentityPanel } from "./editor/IdentityPanel";
+import { IdentityTab } from "./editor/IdentityTab";
 import { LooksPanel } from "./editor/LooksPanel";
 import { PhotoTab } from "./editor/PhotoTab";
 import { Preview } from "./editor/Preview";
-import { RowsEditor } from "./editor/RowsEditor";
 import { initialState, reducer } from "./editor/state";
 import { renderCard, useCardSvg } from "./editor/useCardSvg";
 import { usePortrait } from "./editor/usePortrait";
@@ -44,8 +43,7 @@ export default function Home() {
               <PhotoTab state={state} dispatch={dispatch} portraitRows={portrait.length} />
             </TabsContent>
             <TabsContent value="identity" className="flex flex-col gap-5 pt-5">
-              <IdentityPanel state={state} dispatch={dispatch} />
-              <RowsEditor state={state} dispatch={dispatch} />
+              <IdentityTab state={state} dispatch={dispatch} />
             </TabsContent>
             <TabsContent value="look" className="flex flex-col gap-5 pt-5">
               <LooksPanel state={state} dispatch={dispatch} />
