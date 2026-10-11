@@ -57,9 +57,10 @@ export function reducer(s: EditorState, a: Action): EditorState {
     }
     case "CARD": {
       // A phosphor change keeps the keys readable: graphite keys on a paper screen, amber off it.
-      // An accent set in the same patch is the user's choice and wins.
+      // An accent set in the same patch is the user's choice and wins, and re-picking the current
+      // phosphor (the select reports that too) changes nothing.
       const card = { ...s.card, ...a.patch };
-      if (a.patch.phosphor && !a.patch.accent) {
+      if (a.patch.phosphor && a.patch.phosphor !== s.card.phosphor && !a.patch.accent) {
         if (card.phosphor === "paper" && card.accent !== "graphite") card.accent = "graphite";
         else if (card.phosphor !== "paper" && card.accent === "graphite") card.accent = "amber";
       }

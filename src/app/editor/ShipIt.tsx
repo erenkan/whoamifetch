@@ -12,12 +12,12 @@ const STEPS = [
 export function ShipIt({ login, snippet, onCopy }: { login: string; snippet: string; onCopy: () => void }) {
   const repo = login ? `${login}/${login}` : "<you>/<you>";
   return (
-    <Card className="gap-4 px-6 py-5">
+    <Card className="@container gap-4 px-6 py-5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="text-[15px] font-semibold">Ship it</h2>
         <span className="text-[13px] text-muted-foreground">Three steps, no build tools.</span>
       </div>
-      <ol className="grid gap-4 wide:grid-cols-3">
+      <ol className="grid gap-4 @2xl:grid-cols-3">
         {STEPS.map((s) => (
           <li key={s.n} className="flex items-start gap-2.5">
             <span className="inline-flex size-6 flex-none items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground" aria-hidden="true">{s.n}</span>

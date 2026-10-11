@@ -1,7 +1,7 @@
 "use client";
 
 import { AtSign, Image as ImageIcon, SlidersHorizontal } from "lucide-react";
-import { useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +25,13 @@ import { usePortrait } from "./editor/usePortrait";
  */
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  // A file dropped anywhere but the dropzone would make the browser open it in place of the page,
+  // losing every edit: swallow stray drops (the dropzone handles its own).
+  useEffect(() => {
+    const stop = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", stop); window.addEventListener("drop", stop);
+    return () => { window.removeEventListener("dragover", stop); window.removeEventListener("drop", stop); };
+  }, []);
   const portrait = usePortrait(state);
   // "Play animation" holds for exactly the card and portrait it was pressed on; the next edit returns to the static preview.
   const [played, setPlayed] = useState<{ card: typeof state.card; portrait: typeof portrait } | null>(null);
@@ -42,7 +49,7 @@ export default function Home() {
   return (
     <>
       <AppHeader />
-      <div className="flex flex-1 flex-wrap items-stretch">
+      <div className="flex flex-1 flex-wrap items-stretch wide:flex-nowrap">
         <aside className="order-2 flex w-full flex-col gap-5 border-t border-border bg-card p-5 wide:order-1 wide:w-[380px] wide:max-w-[380px] wide:flex-none wide:border-t-0 wide:border-r">
           <Tabs defaultValue="photo">
             <TabsList className="w-full">
