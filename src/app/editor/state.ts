@@ -55,7 +55,16 @@ export function reducer(s: EditorState, a: Action): EditorState {
       rows = setRow(rows, "Kernel", p.bio);
       return { ...s, card: { ...s.card, userHost: `${p.login}@github`, rows }, source: { ...s.source, initials: initialsOf(p.name, p.login) } };
     }
-    case "CARD": return { ...s, card: { ...s.card, ...a.patch } };
+    case "CARD": {
+      // A phosphor change keeps the keys readable: graphite keys on a paper screen, amber off it.
+      // An accent set in the same patch is the user's choice and wins.
+      const card = { ...s.card, ...a.patch };
+      if (a.patch.phosphor && !a.patch.accent) {
+        if (card.phosphor === "paper" && card.accent !== "graphite") card.accent = "graphite";
+        else if (card.phosphor !== "paper" && card.accent === "graphite") card.accent = "amber";
+      }
+      return { ...s, card };
+    }
     case "PORTRAIT": return { ...s, portrait: { ...s.portrait, ...a.patch } };
     case "ROW_SET": return { ...s, card: { ...s.card, rows: s.card.rows.map((r, i) => (i === a.index ? a.row : r)) } };
     case "ROW_ADD": return s.card.rows.length >= MAX_ROWS ? s : { ...s, rowIds: [...s.rowIds, nextRowId()], card: { ...s.card, rows: [...s.card.rows, { key: "Key", value: "" }] } };

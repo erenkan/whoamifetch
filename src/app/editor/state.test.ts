@@ -67,6 +67,20 @@ describe("editor reducer", () => {
     expect(s.rowIds).toEqual(initialState.rowIds);
     expect(s.card.rows).toHaveLength(initialState.card.rows.length);
   });
+  it("a phosphor change keeps the keys readable: paper gets graphite keys, leaving paper drops graphite for amber", () => {
+    const paper = reducer(initialState, { type: "CARD", patch: { phosphor: "paper" } });
+    expect(paper.card.accent).toBe("graphite");
+    const back = reducer(paper, { type: "CARD", patch: { phosphor: "green" } });
+    expect(back.card.accent).toBe("amber");
+    const cyan = reducer({ ...initialState, card: { ...initialState.card, accent: "cyan" } }, { type: "CARD", patch: { phosphor: "amber" } });
+    expect(cyan.card.accent).toBe("cyan");
+  });
+  it("an accent the user sets explicitly is never overridden by the phosphor rule", () => {
+    expect(reducer(initialState, { type: "CARD", patch: { phosphor: "paper", accent: "cyan" } }).card.accent).toBe("cyan");
+    const paper = reducer(initialState, { type: "PRESET", id: "macplus-paper" });
+    expect(reducer(paper, { type: "CARD", patch: { phosphor: "green", accent: "graphite" } }).card.accent).toBe("graphite");
+    expect(reducer(paper, { type: "CARD", patch: { accent: "amber" } }).card.accent).toBe("amber");
+  });
   it("PRESET sets the three theme axes", () => {
     const s = reducer(initialState, { type: "PRESET", id: "win95-green" });
     expect(s.card.chrome).toBe("win95"); expect(s.card.phosphor).toBe("green"); expect(s.card.accent).toBe("amber");

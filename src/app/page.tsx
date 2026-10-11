@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { previewCard } from "./editor/cardVariant";
 import { ExportBar } from "./editor/ExportBar";
 import { IdentityTab } from "./editor/IdentityTab";
-import { LooksPanel } from "./editor/LooksPanel";
+import { LookTab } from "./editor/LookTab";
 import { PhotoTab } from "./editor/PhotoTab";
 import { Preview } from "./editor/Preview";
 import { initialState, reducer } from "./editor/state";
@@ -46,7 +46,7 @@ export default function Home() {
               <IdentityTab state={state} dispatch={dispatch} />
             </TabsContent>
             <TabsContent value="look" className="flex flex-col gap-5 pt-5">
-              <LooksPanel state={state} dispatch={dispatch} />
+              <LookTab state={state} dispatch={dispatch} />
             </TabsContent>
           </Tabs>
         </aside>
