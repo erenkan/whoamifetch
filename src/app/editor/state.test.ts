@@ -75,6 +75,12 @@ describe("editor reducer", () => {
     const cyan = reducer({ ...initialState, card: { ...initialState.card, accent: "cyan" } }, { type: "CARD", patch: { phosphor: "amber" } });
     expect(cyan.card.accent).toBe("cyan");
   });
+  it("picking the phosphor that is already set keeps the user's accent", () => {
+    const paperAmber = reducer(reducer(initialState, { type: "PRESET", id: "macplus-paper" }), { type: "CARD", patch: { accent: "amber" } });
+    expect(reducer(paperAmber, { type: "CARD", patch: { phosphor: "paper" } }).card.accent).toBe("amber");
+    const greenGraphite = reducer(initialState, { type: "CARD", patch: { accent: "graphite" } });
+    expect(reducer(greenGraphite, { type: "CARD", patch: { phosphor: "green" } }).card.accent).toBe("graphite");
+  });
   it("an accent the user sets explicitly is never overridden by the phosphor rule", () => {
     expect(reducer(initialState, { type: "CARD", patch: { phosphor: "paper", accent: "cyan" } }).card.accent).toBe("cyan");
     const paper = reducer(initialState, { type: "PRESET", id: "macplus-paper" });

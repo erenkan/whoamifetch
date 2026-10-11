@@ -76,8 +76,12 @@ export function PhotoTab({ state, dispatch, portraitRows }: { state: EditorState
   }
 
   const loaded = status === "ready" && state.photo && kind !== "none";
+  // One live region for the whole source step, present from the start so screen readers announce changes.
+  const announce = busy ? "Loading photo and finding the person." : status === "failed" && error ? error
+    : loaded ? (kind === "github" ? "Avatar loaded." : "Photo loaded.") : "";
   return (
     <>
+      <p className="sr-only" role="status">{announce}</p>
       <div className="flex flex-col gap-2">
         <Label>Photo source</Label>
         <ToggleGroup
@@ -132,7 +136,7 @@ export function PhotoTab({ state, dispatch, portraitRows }: { state: EditorState
             <p className="text-[13px] text-muted-foreground">Prints a monogram of up to three letters instead of a portrait.</p>
           </>
         )}
-        {status === "failed" && error && <p className="text-[13px] text-destructive" role="status">{error}</p>}
+        {status === "failed" && error && <p className="text-[13px] text-destructive">{error}</p>}
         {loaded && (
           <div className="flex items-center gap-2.5 rounded-md border border-border bg-background px-2.5 py-2">
             <Avatar className="size-7">
