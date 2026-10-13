@@ -1,9 +1,16 @@
 # whoamifetch
 
+[![ci](https://github.com/erenkan/whoamifetch/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/erenkan/whoamifetch/actions/workflows/ci.yml)
+[![deploy](https://img.shields.io/github/check-runs/erenkan/whoamifetch/main?nameFilter=Cloudflare%20Pages&label=deploy)](https://github.com/erenkan/whoamifetch/commits/main)
+[![site](https://img.shields.io/website?url=https%3A%2F%2Fwhoamifetch.pages.dev&label=site)](https://whoamifetch.pages.dev)
+[![license](https://img.shields.io/github/license/erenkan/whoamifetch)](LICENSE)
+
 Turn your photo and a few lines about yourself into a retro terminal card for your GitHub
 profile README: an ASCII portrait printed by `whoami`, neofetch-style, on a curved CRT
 monitor, a terminal window, a Windows 95 window or a Mac Plus with a 1-bit paper screen. Output
 is a single animated SVG you commit to your `<username>/<username>` repository.
+
+**Make yours at [whoamifetch.pages.dev](https://whoamifetch.pages.dev).**
 
 ## Using it
 
@@ -32,7 +39,8 @@ pnpm build        # static export to out/ (prebuild fetches the segmentation mod
 pnpm test         # unit tests for the pipeline and the editor state
 ```
 
-Deploys as a static site on Cloudflare Pages (build command `pnpm build`, output `out`).
+Deploys as a static site on Cloudflare Pages (build command `pnpm build`, output `out`) to
+[whoamifetch.pages.dev](https://whoamifetch.pages.dev); every push to `main` goes live.
 
 ## How it works
 
