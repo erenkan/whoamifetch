@@ -39,9 +39,6 @@ pnpm build        # static export to out/ (prebuild fetches the segmentation mod
 pnpm test         # unit tests for the pipeline and the editor state
 ```
 
-Deploys as a static site on Cloudflare Pages (build command `pnpm build`, output `out`) to
-[whoamifetch.pages.dev](https://whoamifetch.pages.dev); every push to `main` goes live.
-
 ## How it works
 
 The card is produced by framework-free TypeScript in [`src/lib/pipeline`](src/lib/pipeline):
